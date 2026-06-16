@@ -177,7 +177,8 @@ svg.chart{width:100%; height:auto; display:block; overflow:visible}
   <button data-act="tab:dash" class="on"><span class="e">🏠</span>Start</button>
   <button data-act="tab:run"><span class="e">🏃‍♀️</span>Lauf</button>
   <button data-act="tab:gym"><span class="e">🏋️‍♀️</span>Kraft</button>
-  <button data-act="tab:la"><span class="e">⚡</span>Leichtathletik</button>
+  <button data-act="tab:la"><span class="e">⚡</span>LA</button>
+  <button data-act="tab:body"><span class="e">⚖️</span>Körper</button>
   <button data-act="tab:more"><span class="e">⚙️</span>Mehr</button>
 </nav>
 
@@ -198,20 +199,22 @@ function freshDB(){
       targets:{la:2, gym:3, run:2}, streakMin:3,
       laFocuses:["Sprint","Start/Beschleunigung","Technik","Hürden","Tempolauf","Kraftausdauer","Sprung","Regeneration"],
       sprintPresets:["30m","60m","100m","150m","200m"],
-      onboarded:false
+      weeklyUnits:[], cycleOn:true, onboarded:false
     },
-    runs:[], gym:[], la:[]
+    runs:[], gym:[], la:[], other:[], weight:[], cycle:{entries:[]}
   };
 }
 function migrateDB(d){
   const f=freshDB();
   d.settings=Object.assign({}, f.settings, d.settings||{});
   d.settings.targets=Object.assign({}, f.settings.targets, (d.settings&&d.settings.targets)||{});
-  d.runs=d.runs||[]; d.gym=d.gym||[]; d.la=d.la||[];
+  d.settings.weeklyUnits=d.settings.weeklyUnits||[];
+  d.runs=d.runs||[]; d.gym=d.gym||[]; d.la=d.la||[]; d.other=d.other||[]; d.weight=d.weight||[];
+  d.cycle=d.cycle||{entries:[]}; if(!d.cycle.entries) d.cycle.entries=[];
   if(!d.v) d.v=1;
   return d;
 }
-function hasContent(db){ return !!(db && ((db.runs&&db.runs.length)||(db.gym&&db.gym.length)||(db.la&&db.la.length))); }
+function hasContent(db){ return !!(db && ((db.runs&&db.runs.length)||(db.gym&&db.gym.length)||(db.la&&db.la.length)||(db.other&&db.other.length)||(db.weight&&db.weight.length))); }
 function recoverFromBackup(){
   const ks=listBackups();
   for(let i=ks.length-1;i>=0;i--){ try{ const d=JSON.parse(localStorage.getItem(ks[i])); if(hasContent(d)) return d; }catch(e){} }
@@ -262,7 +265,7 @@ function weeklyAgg(records, valFn){
   records.forEach(r=>{ const v=valFn(r); if(v==null||isNaN(v))return; const k=weekKey(r.date); (m.get(k)||m.set(k,[]).get(k)).push(v); });
   return [...m.keys()].sort().map(k=>{ const a=m.get(k); return {key:k, avg:a.reduce((x,y)=>x+y,0)/a.length, n:a.length}; });
 }
-function weekCounts(){ const m={}; const add=a=>a.forEach(r=>{const k=weekKey(r.date); m[k]=(m[k]||0)+1;}); add(DB.runs);add(DB.gym);add(DB.la); return m; }
+function weekCounts(){ const m={}; const add=a=>a.forEach(r=>{const k=weekKey(r.date); m[k]=(m[k]||0)+1;}); add(DB.runs);add(DB.gym);add(DB.la);add(DB.other); return m; }
 function currentStreak(){
   const m=weekCounts(), min=DB.settings.streakMin||3; let cur=mondayOf(new Date()), streak=0, first=true, guard=0;
   while(guard++<520){ const c=m[isoD(cur)]||0;
@@ -293,6 +296,7 @@ function allWorkouts(){
     ...DB.runs.map(r=>({date:r.date, sec:r.durSec||null, hr:r.avgHr||null, a:"run"})),
     ...DB.gym.map(r=>({date:r.date, sec:r.durSec||null, hr:r.avgHr||null, a:"gym"})),
     ...DB.la.map(r=>({date:r.date, sec:r.durMin?Math.round(r.durMin*60):null, hr:r.avgHr||null, a:"la"})),
+    ...DB.other.map(r=>({date:r.date, sec:r.durMin?Math.round(r.durMin*60):null, hr:r.avgHr||null, a:"other"})),
   ];
 }
 function fmtH(sec){ if(!sec) return "–"; return sec>=3600 ? (sec/3600).toFixed(1).replace(".",",")+" h" : Math.round(sec/60)+" min"; }
@@ -345,6 +349,41 @@ function areaCards(){
     out+=areaCardHTML("la","⚡","Leichtathletik","var(--warn)",metric,badge);
   }
   return out;
+}
+/* --- Wochenplan: was fehlt noch --- */
+function weekPlan(){
+  const tw=thisWeekCounts(), s=DB.settings, items=[];
+  items.push({emoji:"🏃‍♀️", name:"Laufen", done:tw.run, target:s.targets.run, act:"add-run"});
+  items.push({emoji:"🏋️‍♀️", name:"Kraft", done:tw.gym, target:s.targets.gym, act:"add-gym"});
+  items.push({emoji:"⚡", name:"Leichtathletik", done:tw.la, target:s.targets.la, act:"add-la"});
+  const wk=isoD(mondayOf(new Date()));
+  (s.weeklyUnits||[]).forEach(u=>{ const done=DB.other.filter(o=>weekKey(o.date)===wk && (o.name||"").toLowerCase()===(u.name||"").toLowerCase()).length;
+    items.push({emoji:u.emoji||"🔁", name:u.name, done, target:u.target||1, act:"add-other", unit:u.name}); });
+  return items.filter(i=>i.target>0);
+}
+/* --- Zyklus --- */
+function cycleStarts(){ return ((DB.cycle&&DB.cycle.entries)||[]).filter(e=>e.start).map(e=>e.date).sort(); }
+function cycleInfo(){
+  const starts=cycleStarts(); if(!starts.length) return null;
+  const last=starts[starts.length-1];
+  let avg=28; if(starts.length>=2){ const gaps=[]; for(let i=1;i<starts.length;i++) gaps.push(Math.round((parseD(starts[i])-parseD(starts[i-1]))/86400000));
+    const ok=gaps.filter(g=>g>=18&&g<=40); if(ok.length) avg=Math.round(ok.reduce((a,b)=>a+b,0)/ok.length); }
+  const today=parseD(todayISO());
+  const cycleDay=Math.max(1, Math.floor((today-parseD(last))/86400000)+1);
+  const nextStart=new Date(parseD(last)); nextStart.setDate(nextStart.getDate()+avg);
+  const daysToNext=Math.round((nextStart-today)/86400000);
+  const ov=avg-14; let phase, emoji, hint;
+  if(cycleDay<=5){ phase="Menstruation"; emoji="🩸"; hint="Ruhiger angehen ist okay — auf den Körper hören."; }
+  else if(cycleDay<ov-1){ phase="Follikelphase"; emoji="🌱"; hint="Oft viel Energie — gut für intensive Einheiten & PRs."; }
+  else if(cycleDay<=ov+1){ phase="Ovulation"; emoji="✨"; hint="Leistungshoch — ideal für harte Workouts."; }
+  else { phase="Lutealphase"; emoji="🌙"; hint="Mehr Wassereinlagerung & höherer Ruhepuls möglich — Gewichtsschwankung ist normal."; }
+  return { last, avg, cycleDay, nextStart:isoD(nextStart), daysToNext, phase, emoji, hint };
+}
+/* --- Gewicht --- */
+function weightInfo(){
+  const w=[...DB.weight].filter(x=>num(x.kg)!=null).sort((a,b)=>a.date<b.date?-1:1);
+  if(!w.length) return null; const latest=w[w.length-1], first=w[0]; const wa=windowAvg(DB.weight, x=>num(x.kg));
+  return { latest:num(latest.kg), latestDate:latest.date, start:num(first.kg), n:w.length, deltaTotal:num(latest.kg)-num(first.kg), pct4:wa.pct, series:w };
 }
 
 /* ============ CHARTS (inline SVG) ============ */
@@ -424,6 +463,7 @@ function render(){
   else if(App.tab==="run"){ v.innerHTML=viewRun(); mountRun(); }
   else if(App.tab==="gym"){ v.innerHTML=viewGym(); mountGym(); }
   else if(App.tab==="la"){ v.innerHTML=viewLA(); mountLA(); }
+  else if(App.tab==="body"){ v.innerHTML=viewBody(); }
   else if(App.tab==="more"){ v.innerHTML=viewMore(); mountMore(); }
   window.scrollTo(0,0);
 }
@@ -440,6 +480,18 @@ function viewDash(){
     html+=`<div class="banner" data-act="onboard"><span class="e">👋</span><div>
       <div style="font-weight:800">Willkommen, ${s.athlete?esc(s.athlete):"Mausi"}! 🐭</div>
       <div class="small muted">Kurz einrichten: <b>Zone-2-Ziel-Puls</b> + optional <b>Strava verbinden</b> (Apple-Watch-Workouts automatisch). Tippen →</div></div></div>`;
+  }
+  // Wochenplan — was fehlt noch (zum "dranhängeln")
+  { const plan=weekPlan(); const open=plan.filter(i=>i.done<i.target), doneI=plan.filter(i=>i.done>=i.target);
+    html+=`<h2 class="sec">Diese Woche – das fehlt dir noch</h2><div class="card">`;
+    if(!open.length){ html+=`<div class="center" style="padding:6px 0"><div style="font-size:30px">🎉</div><div style="font-weight:800">Wochenziel erreicht!</div><div class="small muted">Alles geschafft — stark, ${esc(s.athlete||"Mausi")}.</div></div>`; }
+    else { html+=open.map(i=>`<div class="item" data-act="${i.act}"${i.unit?` data-unit="${esc(i.unit)}"`:""} style="cursor:pointer">
+        <div class="ic">${i.emoji}</div><div class="grow"><div class="t">${esc(i.name)}</div>
+        <div class="s">noch <b>${i.target-i.done}×</b> · ${i.done}/${i.target} diese Woche</div></div>
+        <span class="tag">+ eintragen</span></div>`).join("");
+      if(doneI.length) html+=`<div class="hint" style="margin-top:8px">✓ erledigt: ${doneI.map(i=>esc(i.name)+" "+i.done+"/"+i.target).join(" · ")}</div>`;
+    }
+    html+=`</div>`;
   }
   // Diese Woche — alle drei Sparten gleichwertig
   html+=`<h2 class="sec">Diese Woche</h2><div class="card"><div class="rings">
@@ -460,14 +512,27 @@ function viewDash(){
   html+=`<h2 class="sec">Trainingszeit / Woche</h2><div class="card tight">
     ${barChart({labels:wl.labels, values:wl.mins, color:"var(--accent)", h:140, empty:"Noch keine Einheiten."})}
     <div class="hint center">Minuten pro Woche · alle Sparten zusammen</div></div>`;
+  // Körper & Zyklus mini
+  { const wi=weightInfo(), ci=s.cycleOn?cycleInfo():null;
+    html+=`<h2 class="sec">Körper${s.cycleOn?" & Zyklus":""}</h2><div class="card" data-act="tab:body" style="cursor:pointer">
+      <div class="between">
+        <div><div class="small muted" style="font-weight:700">⚖️ Gewicht</div>
+          <div style="font-size:22px;font-weight:800;margin-top:3px">${wi?wi.latest.toFixed(1).replace(".",",")+" kg":'<span class="muted" style="font-size:15px">eintragen →</span>'}</div>
+          ${wi&&Math.abs(wi.deltaTotal)>=0.1?`<div class="small ${wi.deltaTotal<0?'pr':'muted'}">${wi.deltaTotal>0?"+":""}${wi.deltaTotal.toFixed(1).replace(".",",")} kg seit Start</div>`:""}</div>
+        ${ci?`<div style="text-align:right"><div class="small muted" style="font-weight:700">${ci.emoji} Zyklus</div>
+          <div style="font-size:17px;font-weight:800;margin-top:3px">${ci.phase}</div>
+          <div class="small muted">Tag ${ci.cycleDay} · Periode in ${ci.daysToNext>=0?ci.daysToNext+" T":"überfällig"}</div></div>`:(s.cycleOn?`<div class="small muted" style="align-self:center">Zyklus →</div>`:"")}
+      </div></div>`;
+  }
   // quick add
-  html+=`<h2 class="sec">Schnell eintragen</h2><div class="qa">
+  html+=`<h2 class="sec">Schnell eintragen</h2><div class="qa" style="grid-template-columns:repeat(4,1fr)">
     <button data-act="add-run"><span class="e">🏃‍♀️</span>Lauf</button>
     <button data-act="add-gym"><span class="e">🏋️‍♀️</span>Kraft</button>
     <button data-act="add-la"><span class="e">⚡</span>LA</button>
+    <button data-act="add-other"><span class="e">🤸‍♀️</span>Sonstige</button>
   </div>`;
   // recent
-  const recent=[...DB.runs.map(r=>({...r,_t:"run"})),...DB.gym.map(r=>({...r,_t:"gym"})),...DB.la.map(r=>({...r,_t:"la"}))]
+  const recent=[...DB.runs.map(r=>({...r,_t:"run"})),...DB.gym.map(r=>({...r,_t:"gym"})),...DB.la.map(r=>({...r,_t:"la"})),...DB.other.map(r=>({...r,_t:"other"}))]
     .sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:0).slice(0,6);
   if(recent.length){ html+=`<h2 class="sec">Zuletzt</h2><div class="card">`+recent.map(r=>itemRow(r)).join("")+`</div>`; }
   return html;
@@ -490,6 +555,10 @@ function itemRow(r){
       <div class="t">Kraft${nex?" · "+nex+" Übung"+(nex===1?"":"en"):""}</div>
       <div class="s">${fmtDateLong(r.date)} · ${extra}</div></div>
       <button class="iconbtn" data-act="edit-gym:${r.id}">✏️</button></div>`; }
+  if(r._t==="other"){ return `<div class="item"><div class="ic" style="background:#e7e9ff;color:var(--accent2)">🤸‍♀️</div><div class="grow">
+    <div class="t">${esc(r.name||"Sonstige")}</div>
+    <div class="s">${fmtDateLong(r.date)}${r.durMin?" · "+r.durMin+" min":""}${r.avgHr?" · ⌀"+r.avgHr+" bpm":""}${r.note?" · "+esc(r.note):""}</div></div>
+    <button class="iconbtn" data-act="edit-other:${r.id}">✏️</button></div>`; }
   const foc=(r.focuses||[]).slice(0,2).join(", ")+((r.focuses||[]).length>2?"…":"");
   return `<div class="item"><div class="ic" style="background:#fff3d6;color:var(--warn)">⚡</div><div class="grow">
     <div class="t">LA · ${esc(foc||"Einheit")}</div>
@@ -637,6 +706,49 @@ function viewLA(){
 }
 function mountLA(){}
 
+/* ---- KÖRPER (Gewicht + Zyklus) ---- */
+function viewBody(){
+  const s=DB.settings, wi=weightInfo();
+  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">⚖️ Körper${s.cycleOn?" & Zyklus":""}</h2>
+    <div class="row"><button class="btn btn-sm" data-act="add-weight">+ Gewicht</button>${s.cycleOn?`<button class="btn sec btn-sm" data-act="add-cycle">🩸 Periode</button>`:""}</div></div>`;
+  if(wi){ const w=wi.series;
+    html+=`<div class="card">
+      <div class="between"><div><div class="small muted" style="font-weight:700">Aktuelles Gewicht</div>
+        <div style="font-size:30px;font-weight:850">${wi.latest.toFixed(1).replace(".",",")} <small style="font-size:15px;font-weight:700" class="muted">kg</small></div></div>
+        <div style="text-align:right" class="small"><div class="${wi.deltaTotal<0?'pr':'muted'}" style="font-weight:700;font-size:14px">${wi.deltaTotal>0?"+":""}${wi.deltaTotal.toFixed(1).replace(".",",")} kg</div><div class="muted">seit Start (${wi.n})</div></div></div>
+      <div style="margin-top:10px">${lineChart({rows:[{ys:w.map(x=>num(x.kg)), color:"var(--accent)"}], xLabels:w.map(x=>fmtDateShort(x.date)), yFmt:v=>v.toFixed(1), empty:"Mind. 2 Werte für den Verlauf."})}</div>
+      <div class="hint center">Gewichts-Verlauf${s.cycleOn?" — zyklusbedingte Schwankungen sind normal":""}</div></div>`;
+    html+=`<div class="card"><div class="small muted" style="font-weight:700;margin-bottom:4px">Einträge</div>`+
+      [...w].reverse().slice(0,10).map(x=>`<div class="kv"><span>${fmtDateLong(x.date)}${x.note?` · <span class="muted">${esc(x.note)}</span>`:""}</span><span><b>${num(x.kg).toFixed(1).replace(".",",")} kg</b> <button class="iconbtn" data-act="del-weight:${x.id}">🗑</button></span></div>`).join("")+`</div>`;
+  } else {
+    html+=`<div class="card">${emptyChart('Noch kein Gewicht erfasst. Tippe „+ Gewicht" — der Verlauf baut sich auf.')}</div>`;
+  }
+  if(s.cycleOn){
+    const ci=cycleInfo();
+    if(ci){
+      html+=`<h2 class="sec">Zyklus</h2><div class="card">
+        <div class="between"><div><div style="font-size:26px">${ci.emoji}</div>
+          <div style="font-size:20px;font-weight:800">${ci.phase}</div>
+          <div class="small muted">Zyklustag ${ci.cycleDay} · Ø-Länge ${ci.avg} Tage</div></div>
+          <div style="text-align:right"><div style="font-size:22px;font-weight:800">${ci.daysToNext>=0?ci.daysToNext:0}</div>
+          <div class="small muted">Tage bis Periode${ci.daysToNext<0?" (überfällig)":""}</div>
+          <div class="small muted">~ ${fmtDateShort(ci.nextStart)}</div></div></div>
+        <div class="hint" style="margin-top:10px">${ci.emoji} ${ci.hint}</div></div>`;
+      const starts=cycleStarts();
+      if(starts.length>=2){ const gaps=[],labs=[]; for(let i=1;i<starts.length;i++){ gaps.push(Math.round((parseD(starts[i])-parseD(starts[i-1]))/86400000)); labs.push(fmtDateShort(starts[i])); }
+        html+=`<div class="card tight">${barChart({labels:labs, values:gaps, color:"var(--accent2)", valFmt:v=>v, h:130, empty:"–"})}<div class="hint center">Zykluslänge (Tage)</div></div>`; }
+      html+=`<div class="card"><div class="small muted" style="font-weight:700;margin-bottom:4px">Perioden-Log</div>`+
+        (starts.slice().reverse().slice(0,8).map(d=>`<div class="kv"><span>🩸 ${fmtDateLong(d)}</span><button class="iconbtn" data-act="del-cycle:${d}">🗑</button></div>`).join("")||`<div class="small muted">Noch nichts geloggt.</div>`)+`</div>`;
+    } else {
+      html+=`<h2 class="sec">Zyklus</h2><div class="card"><div class="hint" style="margin:0">Tippe „🩸 Periode", wenn deine Periode beginnt. Nach 2 Einträgen erscheinen Phase, Ø-Zykluslänge und die Vorhersage der nächsten Periode — die App ordnet Gewichts- & Leistungsschwankungen dann der Phase zu.</div></div>`;
+    }
+    html+=`<div class="card"><button class="btn ghost btn-sm" data-act="cycle-off">Zyklus-Tracking ausblenden</button></div>`;
+  } else {
+    html+=`<div class="card"><button class="btn sec" data-act="cycle-on">🩸 Zyklus-Tracking aktivieren</button><div class="hint">Optional — hilft, Gewicht, Energie & Leistung über den Zyklus einzuordnen.</div></div>`;
+  }
+  return html;
+}
+
 /* ---- MEHR ---- */
 function viewMore(){
   const s=DB.settings;
@@ -671,6 +783,17 @@ function viewMore(){
     <input id="set-streak" inputmode="numeric" value="${s.streakMin}">
   </div>
 
+  <h2 class="sec">Wiederkehrende Einheiten</h2>
+  <div class="card">
+    <div class="hint" style="margin-top:0">Erscheinen im Wochenplan („noch X×"). Z. B. Padel 1×, Mobility 2×. Abhaken = als „Sonstige" mit gleichem Namen eintragen.</div>
+    ${(s.weeklyUnits||[]).length? `<div style="margin:8px 0">`+s.weeklyUnits.map(u=>`<div class="kv"><span>${esc(u.emoji||"🔁")} ${esc(u.name)}</span><span><b>${u.target||1}×/Wo</b> <button class="iconbtn" data-act="del-unit:${u.id}">🗑</button></span></div>`).join("")+`</div>` : ""}
+    <div class="row" style="margin-top:6px">
+      <input id="u-name" placeholder="Name (z. B. Padel)" style="flex:2">
+      <input id="u-target" inputmode="numeric" placeholder="×/Wo" value="1" style="flex:1; max-width:80px">
+      <button class="btn sec btn-sm" data-act="add-unit">+</button>
+    </div>
+  </div>
+
   <h2 class="sec">LA-Schwerpunkte</h2>
   <div class="card">
     <div class="chips" style="margin-bottom:10px">${s.laFocuses.map(f=>`<span class="chip on" data-act="del-focus:${encodeURIComponent(f)}">${esc(f)} ✕</span>`).join("")}</div>
@@ -698,7 +821,8 @@ function viewMore(){
       <button class="btn" data-act="strava-connect" style="margin-top:12px">Mit Strava verbinden</button>
     `}
     <button class="btn ghost" data-act="file-import" style="margin-top:9px">⬆︎ GPX/TCX-Datei importieren</button>
-    <div class="hint">Hinweis: Gewichte/Sätze/Wdh &amp; Sprint-Zeiten erfasst die Watch nicht — die ergänzt du manuell. Import liefert HF + Zeit (+ beim Lauf Pace/Distanz).</div>
+    <button class="btn ghost" data-act="json-import" style="margin-top:9px">⬆︎ Apple Health (JSON aus Kurzbefehl)</button>
+    <div class="hint">Apple Health hat keinen direkten Web-Zugriff — der Kurzbefehl liest Workouts + Gewicht aus Health und übergibt sie als JSON. Gewichte/Sätze/Wdh &amp; Sprint-Zeiten erfasst die Watch nicht — die ergänzt du manuell.</div>
   </div>
   ${pend.length ? `<div class="card"><div class="small muted" style="font-weight:700;margin-bottom:4px">Bereit zum Import (${pend.length})</div>${pend.map(pendRow).join("")}</div>` : ""}
   `; })()}
@@ -714,7 +838,7 @@ function viewMore(){
       <button class="btn danger" data-act="reset">Alle Daten löschen</button>
     </div>
   </div>
-  <div class="center muted small" style="margin:18px 0">GoMausi v2.0 🐭 · lokal & offline · Strava-Sync · unabhängig von SUB4</div>
+  <div class="center muted small" style="margin:18px 0">GoMausi v3.0 🐭 · Gym · LA · Lauf · Gewicht/Zyklus · Strava+Health-Import · lokal & offline</div>
   `;
 }
 function mountMore(){
@@ -896,6 +1020,103 @@ function saveLA(id){
   save(); closeSheet(); App.tab="la"; render(); toast("LA-Einheit gespeichert ⚡");
 }
 
+/* SONSTIGE form */
+function openOtherSheet(existing, prefillName){
+  const r=existing||{};
+  openSheet(`
+    <h3>${existing?"Aktivität bearbeiten":"Sonstige Aktivität"}</h3>
+    <label class="f">Was?</label><input id="o-name" list="otherNames" value="${esc(r.name||prefillName||"")}" placeholder="z. B. Rad, Padel, Schwimmen, Yoga">
+    <datalist id="otherNames">${[...new Set(DB.other.map(o=>o.name).filter(Boolean))].map(n=>`<option value="${esc(n)}">`).join("")}</datalist>
+    <label class="f">Datum</label><input id="o-date" type="date" value="${r.date||todayISO()}">
+    <div class="row">
+      <div class="field grow"><label class="f">Dauer (Min)</label><input id="o-dur" inputmode="numeric" value="${r.durMin||""}" placeholder="opt."></div>
+      <div class="field grow"><label class="f">Ø-Puls</label><input id="o-ahr" inputmode="numeric" value="${r.avgHr||""}" placeholder="opt."></div>
+      <div class="field grow"><label class="f">Max-Puls</label><input id="o-mhr" inputmode="numeric" value="${r.maxHr||""}" placeholder="opt."></div>
+    </div>
+    <label class="f">Notiz</label><textarea id="o-note" placeholder="…">${esc(r.note||"")}</textarea>
+    <div style="display:flex; gap:9px; margin-top:16px">
+      ${existing?`<button class="btn danger" data-act="del-other:${existing.id}" style="flex:0 0 auto">🗑</button>`:""}
+      <button class="btn" data-act="save-other" data-id="${existing?existing.id:""}">Speichern</button>
+    </div>
+  `);
+}
+function saveOther(id){
+  const name=$("#o-name").value.trim(); if(!name){ toast("Name fehlt"); return; }
+  const rec={ id:id||uid(), date:$("#o-date").value||todayISO(), name,
+    durMin:num($("#o-dur").value)||null, avgHr:num($("#o-ahr").value)||null, maxHr:num($("#o-mhr").value)||null, note:$("#o-note").value.trim() };
+  if(id){ const i=DB.other.findIndex(x=>x.id===id); if(i>=0)DB.other[i]=rec; } else DB.other.push(rec);
+  save(); closeSheet(); App.tab="dash"; render(); toast("Aktivität gespeichert ✓");
+}
+
+/* GEWICHT form */
+function openWeightSheet(existing){
+  const r=existing||{};
+  openSheet(`
+    <h3>${existing?"Gewicht bearbeiten":"Gewicht eintragen"}</h3>
+    <label class="f">Datum</label><input id="w-date" type="date" value="${r.date||todayISO()}">
+    <label class="f">Gewicht (kg)</label><input id="w-kg" inputmode="decimal" value="${r.kg||""}" placeholder="z. B. 62,5">
+    <label class="f">Notiz</label><input id="w-note" value="${esc(r.note||"")}" placeholder="optional">
+    <button class="btn" data-act="save-weight" data-id="${existing?existing.id:""}" style="margin-top:16px">Speichern</button>
+  `);
+}
+function saveWeight(id){
+  const kg=num($("#w-kg").value); if(!kg){ toast("Gewicht fehlt"); return; }
+  const rec={ id:id||uid(), date:$("#w-date").value||todayISO(), kg, note:$("#w-note").value.trim() };
+  if(id){ const i=DB.weight.findIndex(x=>x.id===id); if(i>=0)DB.weight[i]=rec; } else DB.weight.push(rec);
+  save(); closeSheet(); App.tab="body"; render(); toast("Gewicht gespeichert ✓");
+}
+
+/* ZYKLUS — Periodenstart loggen */
+function openCycleSheet(){
+  openSheet(`
+    <h3>🩸 Periode eintragen</h3>
+    <div class="hint" style="margin-top:0">Markiere den <b>ersten Tag</b> deiner Periode. Daraus berechnet GoMausi Zyklusphase, Ø-Länge & Vorhersage.</div>
+    <label class="f">Erster Tag</label><input id="c-date" type="date" value="${todayISO()}">
+    <label class="f">Stärke (optional)</label>
+    <select id="c-flow"><option value="">—</option><option value="leicht">leicht</option><option value="mittel">mittel</option><option value="stark">stark</option></select>
+    <label class="f">Notiz (optional)</label><input id="c-note" placeholder="Symptome o. Ä.">
+    <button class="btn" data-act="save-cycle" style="margin-top:16px">Speichern</button>
+  `);
+}
+function saveCycle(){
+  const date=$("#c-date").value||todayISO();
+  DB.cycle.entries=DB.cycle.entries.filter(e=>!(e.start&&e.date===date));
+  DB.cycle.entries.push({ id:uid(), date, start:true, flow:$("#c-flow").value||"", note:$("#c-note").value.trim() });
+  save(); closeSheet(); App.tab="body"; render(); toast("Periode geloggt 🩸");
+}
+
+/* JSON-IMPORT (Apple-Kurzbefehl / Health) */
+function openJsonImport(){
+  openSheet(`
+    <h3>Import aus Apple Health (JSON)</h3>
+    <div class="hint" style="margin-top:0">JSON aus deinem Kurzbefehl einfügen oder .json-Datei laden. Workouts → Import-Liste (Bereich wählen), Gewichte → direkt in „Körper".</div>
+    <textarea id="j-text" style="min-height:120px; font-family:ui-monospace,monospace; font-size:13px" placeholder='{"workouts":[…],"weight":[…]}'></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="btn sec" data-act="json-file" style="flex:1">.json laden</button>
+      <button class="btn" data-act="json-parse" style="flex:1">Einlesen</button>
+    </div>
+    <div class="hint">Beispiel: <code>{"workouts":[{"type":"Run","date":"2026-06-16","durationSec":1800,"distanceKm":4.2,"avgHr":150,"maxHr":165}],"weight":[{"date":"2026-06-16","kg":62.4}]}</code></div>
+  `);
+}
+function importJsonData(obj){
+  if(!obj||typeof obj!=="object"){ toast("Ungültiges JSON"); return; }
+  const c=sCfg(); c.pending=c.pending||[]; let wkAdd=0, wAdd=0;
+  (obj.weight||obj.weights||[]).forEach(x=>{ const kg=num(x.kg||x.weight||x.value), d=String(x.date||x.start||"").slice(0,10);
+    if(kg&&d){ if(!DB.weight.some(e=>e.date===d)){ DB.weight.push({id:uid(),date:d,kg,note:"Health-Import"}); wAdd++; } } });
+  (obj.workouts||[]).forEach((w,i)=>{ const date=String(w.date||w.start||w.startDate||"").slice(0,10)||todayISO();
+    const sec=Math.round(num(w.durationSec||w.duration||w.sec)|| (num(w.durationMin)?num(w.durationMin)*60:0))||0;
+    const km=num(w.distanceKm||w.km|| (num(w.distanceM)?num(w.distanceM)/1000:null));
+    const type=String(w.type||w.activity||"Workout");
+    c.pending.unshift({ id:"json-"+Date.now()+"-"+i, type, name:w.name||type, distance:km?km*1000:0, moving_time:sec,
+      average_heartrate:num(w.avgHr||w.averageHr||w.hr)||null, max_heartrate:num(w.maxHr||w.maximumHr)||null,
+      start_date:date+"T12:00:00", bucket:/run|lauf|walk|jog/i.test(type)?"run":"gym" }); wkAdd++; });
+  save(); closeSheet(); App.tab=wkAdd?"more":"body"; render();
+  toast(`Import: ${wkAdd} Workout(s) → Liste · ${wAdd} Gewicht(e)`);
+}
+function jsonParseFromText(){ try{ importJsonData(JSON.parse(($("#j-text")||{}).value||"")); }catch(e){ toast("JSON nicht lesbar"); } }
+function jsonImportFile(){ const inp=document.createElement("input"); inp.type="file"; inp.accept=".json,application/json";
+  inp.onchange=()=>{ const f=inp.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{ try{ importJsonData(JSON.parse(rd.result)); }catch(e){ toast("JSON nicht lesbar"); } }; rd.readAsText(f); }; inp.click(); }
+
 /* ============ DATA ACTIONS ============ */
 function doExport(){
   const blob=new Blob([JSON.stringify(DB,null,2)],{type:"application/json"});
@@ -938,7 +1159,12 @@ function loadDemo(){
       results:[{label:"30m",sec:+(4.8-(8-w)*0.03).toFixed(2)},{label:"60m",sec:+(8.6-(8-w)*0.05).toFixed(2)}], rpe:8, durMin:90, note:"Bahn"});
     la.push({id:uid(), date:dayBack(w*7+2), focuses:["Technik","Sprung"], results:[], rpe:6, durMin:75, note:"Technik"});
   }
-  DB.runs=runs; DB.gym=gym; DB.la=la; DB.settings.zone2Target=145; DB.settings.onboarded=true; DB.settings.athlete="Mausi";
+  const weight=[]; for(let w=8;w>=0;w--){ weight.push({id:uid(), date:dayBack(w*7), kg:+(64 - (8-w)*0.22 + (w%2?0.3:-0.2)).toFixed(1), note:""}); }
+  const cyc={entries:[ {id:uid(),date:dayBack(86),start:true,flow:"mittel"},{id:uid(),date:dayBack(58),start:true,flow:"mittel"},{id:uid(),date:dayBack(30),start:true,flow:"stark"},{id:uid(),date:dayBack(2),start:true,flow:"leicht"} ]};
+  const other=[ {id:uid(), date:dayBack(2), name:"Padel", durMin:75, avgHr:138, maxHr:170, note:""}, {id:uid(), date:dayBack(6), name:"Rad", durMin:95, avgHr:127, maxHr:150, note:"locker"} ];
+  DB.runs=runs; DB.gym=gym; DB.la=la; DB.other=other; DB.weight=weight; DB.cycle=cyc;
+  DB.settings.zone2Target=145; DB.settings.onboarded=true; DB.settings.athlete="Mausi"; DB.settings.cycleOn=true;
+  DB.settings.weeklyUnits=[{id:uid(),name:"Padel",target:1},{id:uid(),name:"Mobility",target:2}];
   save(); App.tab="dash"; render(); toast("Demo-Daten geladen ✨");
 }
 function resetAll(){
@@ -1123,6 +1349,24 @@ document.addEventListener("click", e=>{
     case "del-run": if(confirm("Diesen Lauf löschen?")){ DB.runs=DB.runs.filter(r=>r.id!==arg); save(); closeSheet(); render(); toast("Gelöscht"); } break;
     case "del-gym": if(confirm("Diese Einheit löschen?")){ DB.gym=DB.gym.filter(r=>r.id!==arg); save(); closeSheet(); render(); toast("Gelöscht"); } break;
     case "del-la": if(confirm("Diese Einheit löschen?")){ DB.la=DB.la.filter(r=>r.id!==arg); save(); closeSheet(); render(); toast("Gelöscht"); } break;
+    case "add-other": openOtherSheet(null, a.el.dataset.unit||""); break;
+    case "edit-other": openOtherSheet(DB.other.find(r=>r.id===arg)); break;
+    case "save-other": saveOther(a.el.dataset.id||""); break;
+    case "del-other": if(confirm("Diese Aktivität löschen?")){ DB.other=DB.other.filter(r=>r.id!==arg); save(); closeSheet(); render(); toast("Gelöscht"); } break;
+    case "add-weight": openWeightSheet(); break;
+    case "save-weight": saveWeight(a.el.dataset.id||""); break;
+    case "del-weight": if(confirm("Gewichts-Eintrag löschen?")){ DB.weight=DB.weight.filter(r=>r.id!==arg); save(); render(); toast("Gelöscht"); } break;
+    case "add-cycle": openCycleSheet(); break;
+    case "save-cycle": saveCycle(); break;
+    case "del-cycle": if(confirm("Periode-Eintrag löschen?")){ DB.cycle.entries=DB.cycle.entries.filter(e=>!(e.start&&e.date===arg)); save(); render(); toast("Gelöscht"); } break;
+    case "cycle-on": DB.settings.cycleOn=true; save(); render(); break;
+    case "cycle-off": DB.settings.cycleOn=false; save(); render(); break;
+    case "add-unit": { const ne=$("#u-name"), n=ne&&ne.value.trim(); const t=Math.max(1,Math.round(num(($("#u-target")||{}).value)||1));
+      if(n){ DB.settings.weeklyUnits.push({id:uid(),name:n,target:t}); save(); render(); } else toast("Name fehlt"); break; }
+    case "del-unit": DB.settings.weeklyUnits=(DB.settings.weeklyUnits||[]).filter(u=>u.id!==arg); save(); render(); break;
+    case "json-import": openJsonImport(); break;
+    case "json-parse": jsonParseFromText(); break;
+    case "json-file": jsonImportFile(); break;
     case "eff": App.effMode=arg; render(); break;
     case "gym-add-ex": collectGx(); gx.push({name:"",sets:[{kg:"",reps:""}]}); renderGx(); break;
     case "gym-del-ex": collectGx(); gx.splice(+arg,1); if(!gx.length)gx=[{name:"",sets:[{kg:"",reps:""}]}]; renderGx(); break;
