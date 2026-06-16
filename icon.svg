@@ -1,38 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ff5fa2"/>
-      <stop offset="1" stop-color="#ff8a5b"/>
-    </linearGradient>
-    <linearGradient id="ear" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffd6e6"/>
-      <stop offset="1" stop-color="#ff9ec7"/>
-    </linearGradient>
-  </defs>
-  <rect width="1024" height="1024" rx="232" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="228" fill="#2b1d57"/>
   <!-- ears -->
-  <circle cx="346" cy="372" r="156" fill="#f4f5f7"/>
-  <circle cx="678" cy="372" r="156" fill="#f4f5f7"/>
-  <circle cx="346" cy="372" r="92" fill="url(#ear)"/>
-  <circle cx="678" cy="372" r="92" fill="url(#ear)"/>
+  <circle cx="356" cy="384" r="150" fill="#ff5f9e"/>
+  <circle cx="668" cy="384" r="150" fill="#ff5f9e"/>
+  <circle cx="356" cy="384" r="78" fill="#ffa6c9"/>
+  <circle cx="668" cy="384" r="78" fill="#ffa6c9"/>
   <!-- head -->
-  <circle cx="512" cy="588" r="262" fill="#f4f5f7"/>
-  <!-- eyes -->
-  <circle cx="436" cy="560" r="30" fill="#2b2530"/>
-  <circle cx="588" cy="560" r="30" fill="#2b2530"/>
-  <circle cx="446" cy="551" r="9" fill="#ffffff"/>
-  <circle cx="598" cy="551" r="9" fill="#ffffff"/>
+  <circle cx="512" cy="576" r="246" fill="#ff5f9e"/>
+  <!-- eyes (cut to background) -->
+  <circle cx="442" cy="556" r="30" fill="#2b1d57"/>
+  <circle cx="582" cy="556" r="30" fill="#2b1d57"/>
   <!-- nose -->
-  <circle cx="512" cy="648" r="34" fill="#ff4f93"/>
-  <!-- smile -->
-  <path d="M512 682 q0 40 -46 52 M512 682 q0 40 46 52" stroke="#cdb9c5" stroke-width="11" stroke-linecap="round" fill="none"/>
-  <!-- whiskers -->
-  <g stroke="#ffffff" stroke-width="10" stroke-linecap="round" opacity="0.95">
-    <path d="M470 660 L300 624"/>
-    <path d="M470 678 L300 690"/>
-    <path d="M470 696 L312 752"/>
-    <path d="M554 660 L724 624"/>
-    <path d="M554 678 L724 690"/>
-    <path d="M554 696 L712 752"/>
+  <circle cx="512" cy="642" r="30" fill="#2b1d57"/>
+  <!-- whiskers (cut to background) -->
+  <g stroke="#2b1d57" stroke-width="12" stroke-linecap="round">
+    <path d="M470 656 L322 628"/>
+    <path d="M470 678 L322 700"/>
+    <path d="M554 656 L702 628"/>
+    <path d="M554 678 L702 700"/>
   </g>
 </svg>
