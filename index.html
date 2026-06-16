@@ -181,6 +181,8 @@ button.btn{border-radius:12px}
 .qa button .e{font-size:22px; color:var(--accent); display:inline-flex}
 .areacard .ic-svg{color:inherit}
 .ring-lab .ic-svg{vertical-align:-0.12em; margin-right:2px}
+.headrow{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:4px 0 14px; min-height:40px}
+.headrow h2.sec{margin:0 2px}
 </style>
 </head>
 <body>
@@ -609,7 +611,7 @@ function itemRow(r){
 /* ---- LAUF ---- */
 function viewRun(){
   const runs=[...DB.runs].sort((a,b)=>a.date<b.date?-1:1);
-  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">Zone-2-Lauf</h2>
+  let html=`<div class="headrow"><h2 class="sec">Zone-2-Lauf</h2>
     <button class="btn btn-sm" data-act="add-run">+ Lauf</button></div>`;
   if(!runs.length){ html+=`<div class="card">${emptyChart('Noch kein Lauf — tippe „+ Lauf" und lies Pace/Puls von der Uhr ab.')}</div>`; return html; }
   const t=DB.settings.zone2Target, eff=effSummary();
@@ -672,7 +674,7 @@ function exerciseHistory(name){
   return out.sort((a,b)=>a.date<b.date?-1:1);
 }
 function viewGym(){
-  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">Kraft / Studio</h2>
+  let html=`<div class="headrow"><h2 class="sec">Kraft / Studio</h2>
     <button class="btn btn-sm" data-act="add-gym">+ Einheit</button></div>`;
   const names=exerciseNames();
   if(!DB.gym.length){ html+=`<div class="card">${emptyChart("Noch keine Kraft-Einheit. Übung + Gewicht + Sätze eintragen – der Verlauf je Übung baut sich automatisch auf.")}</div>`; return html; }
@@ -711,7 +713,7 @@ function mountGym(){}
 
 /* ---- LEICHTATHLETIK ---- */
 function viewLA(){
-  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">Leichtathletik</h2>
+  let html=`<div class="headrow"><h2 class="sec">Leichtathletik</h2>
     <button class="btn btn-sm" data-act="add-la">+ Einheit</button></div>`;
   if(!DB.la.length){ html+=`<div class="card">${emptyChart("Noch keine LA-Einheit. Schwerpunkt(e) wählen, Sprint-Zeiten optional – pro Schwerpunkt baut sich eine Historie auf.")}</div>`; return html; }
   // sprint times per distance
@@ -749,7 +751,7 @@ function mountLA(){}
 /* ---- KÖRPER (Gewicht + Zyklus) ---- */
 function viewBody(){
   const s=DB.settings, wi=weightInfo();
-  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">Körper${s.cycleOn?" & Zyklus":""}</h2>
+  let html=`<div class="headrow"><h2 class="sec">Körper${s.cycleOn?" & Zyklus":""}</h2>
     <div class="row"><button class="btn btn-sm" data-act="add-weight">+ Gewicht</button>${s.cycleOn?`<button class="btn sec btn-sm" data-act="add-cycle"><span style="display:inline-flex;gap:5px;align-items:center">${icon('droplet')} Periode</span></button>`:""}</div></div>`;
   if(wi){ const w=wi.series;
     html+=`<div class="card">
