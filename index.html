@@ -164,22 +164,39 @@ svg.chart{width:100%; height:auto; display:block; overflow:visible}
 .setrow{display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-bottom:7px; align-items:center}
 .exblock{border:1px solid var(--line); border-radius:14px; padding:12px; margin-bottom:10px; background:var(--card)}
 .hint{font-size:11.5px; color:var(--mut); margin-top:5px}
+/* --- Serious/premium refinements (Runna/Strava) --- */
+.ic-svg{display:inline-block; vertical-align:-0.14em}
+.brand{letter-spacing:-.03em}
+.brand img{border-radius:8px}
+h2.sec{letter-spacing:.09em; font-size:11.5px}
+.card{border-radius:16px}
+button.btn{border-radius:12px}
+.stat .v{font-variant-numeric:tabular-nums; letter-spacing:-.01em}
+.item .ic{border-radius:10px; background:var(--bg); color:var(--accent); border:1px solid var(--line); font-size:18px}
+.flame{background:transparent; border:1px solid var(--line); color:var(--ink); font-weight:700; gap:5px; padding:5px 11px}
+.flame .ic-svg{color:var(--accent)}
+.tabbar{padding-top:8px}
+.tabbar button{font-size:10px; letter-spacing:.02em; gap:5px}
+.tabbar button .e{font-size:20px; display:inline-flex; line-height:1}
+.qa button .e{font-size:22px; color:var(--accent); display:inline-flex}
+.areacard .ic-svg{color:inherit}
+.ring-lab .ic-svg{vertical-align:-0.12em; margin-right:2px}
 </style>
 </head>
 <body>
 <header class="topbar">
   <div class="brand"><img src="icon.svg" alt=""><span>GoMausi</span></div>
-  <div class="flame" id="flame">🔥 0 Wo.</div>
+  <div class="flame" id="flame"></div>
 </header>
 <main id="view"></main>
 
 <nav class="tabbar" id="tabbar">
-  <button data-act="tab:dash" class="on"><span class="e">🏠</span>Start</button>
-  <button data-act="tab:run"><span class="e">🏃‍♀️</span>Lauf</button>
-  <button data-act="tab:gym"><span class="e">🏋️‍♀️</span>Kraft</button>
-  <button data-act="tab:la"><span class="e">⚡</span>LA</button>
-  <button data-act="tab:body"><span class="e">⚖️</span>Körper</button>
-  <button data-act="tab:more"><span class="e">⚙️</span>Mehr</button>
+  <button data-act="tab:dash" class="on"><span class="e"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v10h12V10"/></svg></span>Start</button>
+  <button data-act="tab:run"><span class="e"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h3l2.2 5 3.8-13 2.4 7H21"/></svg></span>Lauf</button>
+  <button data-act="tab:gym"><span class="e"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8v8M10 9.5v5M14 9.5v5M17 8v8M10 12h4M4.5 10.5v3M19.5 10.5v3"/></svg></span>Kraft</button>
+  <button data-act="tab:la"><span class="e"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7"/><path d="M12 13.5V10M9.5 2.5h5M12 2.5v2.3"/></svg></span>LA</button>
+  <button data-act="tab:body"><span class="e"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15M7 19h10M7 8h10"/><path d="M7 8 4 14a3 3 0 0 0 6 0z"/><path d="M17 8l-3 6a3 3 0 0 0 6 0z"/></svg></span>Körper</button>
+  <button data-act="tab:more"><span class="e"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="17" r="2"/></svg></span>Mehr</button>
 </nav>
 
 <div class="overlay" id="overlay" data-act="sheet-close"></div>
@@ -240,6 +257,29 @@ const $=(s,r=document)=>r.querySelector(s);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const num=v=>{ const n=parseFloat(String(v==null?"":v).replace(",",".")); return isNaN(n)?null:n; };
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+/* Linien-Icons (1em, currentColor) — kein Emoji */
+const ICONS={
+  home:'<path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v10h12V10"/>',
+  run:'<path d="M3 13h3l2.2 5 3.8-13 2.4 7H21"/>',
+  dumbbell:'<path d="M7 8v8M10 9.5v5M14 9.5v5M17 8v8M10 12h4M4.5 10.5v3M19.5 10.5v3"/>',
+  la:'<circle cx="12" cy="13.5" r="7"/><path d="M12 13.5V10M9.5 2.5h5M12 2.5v2.3"/>',
+  other:'<path d="M6 21V4M6 4c3-1.6 6 1.6 9 0v8c-3 1.6-6-1.6-9 0"/>',
+  scale:'<path d="M12 4v15M7 19h10M7 8h10"/><path d="M7 8 4 14a3 3 0 0 0 6 0z"/><path d="M17 8l-3 6a3 3 0 0 0 6 0z"/>',
+  settings:'<path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="17" r="2"/>',
+  flame:'<path d="M12 3c2.5 3.4 4.4 5.5 4.4 9a4.4 4.4 0 0 1-8.8 0c0-1.6.7-2.8 1.7-3.8C9.5 9.7 10 11 11.5 11 9.8 9 10.5 5.5 12 3z"/>',
+  droplet:'<path d="M12 3.5c3 4 6 6.8 6 10a6 6 0 0 1-12 0c0-3.2 3-6 6-10z"/>',
+  repeat:'<path d="M17 3l3 3-3 3"/><path d="M20 6H8a4 4 0 0 0-4 4v1"/><path d="M7 21l-3-3 3-3"/><path d="M4 18h12a4 4 0 0 0 4-4v-1"/>',
+  chart:'<path d="M4 5v15h16"/><path d="M7 14l3-4 3 2 5-7"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  check:'<path d="M4.5 12.5 9.5 17.5 19.5 6.5"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  pencil:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/>',
+  trash:'<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"/>',
+  upload:'<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',
+  arrowRight:'<path d="M5 12h13M13 6l6 6-6 6"/>',
+  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.4"/>'
+};
+function icon(n){ return `<svg class="ic-svg" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]||""}</svg>`; }
 function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2400); }
 function parseD(s){ const [y,m,d]=String(s).split("-").map(Number); return new Date(y,(m||1)-1,d||1); }
 function isoD(dt){ return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`; }
@@ -317,9 +357,9 @@ function windowAvg(records, valFn, days){ days=days||28; const now=new Date(), a
   const avg=z=>z.length?z.reduce((s,x)=>s+x,0)/z.length:null; const rA=avg(rec), pA=avg(prev);
   return { recent:rA, prev:pA, pct:(rA!=null&&pA!=null&&pA!==0)?(rA-pA)/pA*100:null, n:rec.length };
 }
-function areaCardHTML(tab,emoji,title,color,metric,badge){
+function areaCardHTML(tab,ic,title,color,metric,badge){
   return `<div class="card areacard" data-act="tab:${tab}" style="cursor:pointer; border-left:4px solid ${color}">
-    <div class="between"><div class="small muted" style="font-weight:700">${emoji} ${title}</div>${badge||""}</div>
+    <div class="between"><div class="small muted" style="font-weight:700;display:flex;align-items:center;gap:7px"><span style="color:${color};font-size:16px">${icon(ic)}</span>${title}</div>${badge||""}</div>
     <div style="font-size:21px; font-weight:800; margin-top:5px">${metric}</div></div>`;
 }
 function areaCards(){
@@ -329,14 +369,14 @@ function areaCards(){
     if(eff){ metric=`${fmtPace(eff.rPat||eff.latestPat)} <span class="small muted">min/km @${eff.t}</span>`;
       if(eff.deltaPct!=null){ const g=eff.deltaPct>0; badge=`<span class="tag ${g?'g':''}">${g?'▼':'▲'} ${Math.abs(eff.deltaPct).toFixed(0)}% vs 4 Wo.</span>`; }
     } else metric=`<span class="muted" style="font-size:15px">noch keine Läufe</span>`;
-    out+=areaCardHTML("run","🏃‍♀️","Lauf · Effizienz","var(--accent)",metric,badge);
+    out+=areaCardHTML("run","run","Lauf · Effizienz","var(--accent)",metric,badge);
   }
   // Kraft — Volumen-Trend
   { const wv=windowAvg(DB.gym, gymVolume); let metric, badge="";
     if(DB.gym.some(s=>gymVolume(s)>0)){ metric=`${Math.round(wv.recent||0)} <span class="small muted">kg Ø-Volumen</span>`;
       if(wv.pct!=null){ const g=wv.pct>0; badge=`<span class="tag ${g?'g':''}">${g?'▲':'▼'} ${Math.abs(wv.pct).toFixed(0)}% vs 4 Wo.</span>`; }
     } else metric=`<span class="muted" style="font-size:15px">${DB.gym.length?"HF/Zeit erfasst · Übungen ergänzen":"noch keine Einheiten"}</span>`;
-    out+=areaCardHTML("gym","🏋️‍♀️","Kraft","var(--accent2)",metric,badge);
+    out+=areaCardHTML("gym","dumbbell","Kraft","var(--accent2)",metric,badge);
   }
   // LA — beste Sprintzeit (Top-Distanz)
   { let metric, badge=""; const dc={}; DB.la.forEach(s=>(s.results||[]).forEach(r=>{ if(r.label) dc[r.label]=(dc[r.label]||0)+1; }));
@@ -346,19 +386,19 @@ function areaCards(){
       if(wv.pct!=null){ const g=wv.pct<0; badge=`<span class="tag ${g?'g':''}">${g?'▼':'▲'} ${Math.abs(wv.pct).toFixed(1)}% ${g?'schneller':'langs.'}</span>`; }
     } else if(DB.la.length){ metric=`${DB.la.length} <span class="small muted">Einheiten</span>`; }
     else metric=`<span class="muted" style="font-size:15px">noch keine Einheiten</span>`;
-    out+=areaCardHTML("la","⚡","Leichtathletik","var(--warn)",metric,badge);
+    out+=areaCardHTML("la","la","Leichtathletik","var(--warn)",metric,badge);
   }
   return out;
 }
 /* --- Wochenplan: was fehlt noch --- */
 function weekPlan(){
   const tw=thisWeekCounts(), s=DB.settings, items=[];
-  items.push({emoji:"🏃‍♀️", name:"Laufen", done:tw.run, target:s.targets.run, act:"add-run"});
-  items.push({emoji:"🏋️‍♀️", name:"Kraft", done:tw.gym, target:s.targets.gym, act:"add-gym"});
-  items.push({emoji:"⚡", name:"Leichtathletik", done:tw.la, target:s.targets.la, act:"add-la"});
+  items.push({icon:"run", name:"Laufen", done:tw.run, target:s.targets.run, act:"add-run"});
+  items.push({icon:"dumbbell", name:"Kraft", done:tw.gym, target:s.targets.gym, act:"add-gym"});
+  items.push({icon:"la", name:"Leichtathletik", done:tw.la, target:s.targets.la, act:"add-la"});
   const wk=isoD(mondayOf(new Date()));
   (s.weeklyUnits||[]).forEach(u=>{ const done=DB.other.filter(o=>weekKey(o.date)===wk && (o.name||"").toLowerCase()===(u.name||"").toLowerCase()).length;
-    items.push({emoji:u.emoji||"🔁", name:u.name, done, target:u.target||1, act:"add-other", unit:u.name}); });
+    items.push({icon:"repeat", name:u.name, done, target:u.target||1, act:"add-other", unit:u.name}); });
   return items.filter(i=>i.target>0);
 }
 /* --- Zyklus --- */
@@ -372,12 +412,12 @@ function cycleInfo(){
   const cycleDay=Math.max(1, Math.floor((today-parseD(last))/86400000)+1);
   const nextStart=new Date(parseD(last)); nextStart.setDate(nextStart.getDate()+avg);
   const daysToNext=Math.round((nextStart-today)/86400000);
-  const ov=avg-14; let phase, emoji, hint;
-  if(cycleDay<=5){ phase="Menstruation"; emoji="🩸"; hint="Ruhiger angehen ist okay — auf den Körper hören."; }
-  else if(cycleDay<ov-1){ phase="Follikelphase"; emoji="🌱"; hint="Oft viel Energie — gut für intensive Einheiten & PRs."; }
-  else if(cycleDay<=ov+1){ phase="Ovulation"; emoji="✨"; hint="Leistungshoch — ideal für harte Workouts."; }
-  else { phase="Lutealphase"; emoji="🌙"; hint="Mehr Wassereinlagerung & höherer Ruhepuls möglich — Gewichtsschwankung ist normal."; }
-  return { last, avg, cycleDay, nextStart:isoD(nextStart), daysToNext, phase, emoji, hint };
+  const ov=avg-14; let phase, color, hint;
+  if(cycleDay<=5){ phase="Menstruation"; color="#e0566b"; hint="Ruhiger angehen ist okay — auf den Körper hören."; }
+  else if(cycleDay<ov-1){ phase="Follikelphase"; color="#13b07d"; hint="Oft viel Energie — gut für intensive Einheiten & PRs."; }
+  else if(cycleDay<=ov+1){ phase="Ovulation"; color="#f5a623"; hint="Leistungshoch — ideal für harte Workouts."; }
+  else { phase="Lutealphase"; color="#7c5cff"; hint="Mehr Wassereinlagerung & höherer Ruhepuls möglich — Gewichtsschwankung ist normal."; }
+  return { last, avg, cycleDay, nextStart:isoD(nextStart), daysToNext, phase, color, hint };
 }
 /* --- Gewicht --- */
 function weightInfo(){
@@ -387,7 +427,7 @@ function weightInfo(){
 }
 
 /* ============ CHARTS (inline SVG) ============ */
-function emptyChart(msg){ return `<div class="empty"><span class="e">📈</span>${msg||"Noch keine Daten – trag deine erste Einheit ein."}</div>`; }
+function emptyChart(msg){ return `<div class="empty"><span class="e" style="color:var(--mut);opacity:.6">${icon('chart')}</span>${msg||"Noch keine Daten – trag deine erste Einheit ein."}</div>`; }
 function lineChart(o){
   const W=340, H=o.h||175, padL=40, padR=14, padT=14, padB=26;
   const rows=o.rows||[], labels=o.xLabels||[];
@@ -450,14 +490,14 @@ function ring(value,goal,label,emoji,color){
       stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 32 32)"/>
     <text x="32" y="31" text-anchor="middle" font-size="16" font-weight="800" fill="var(--ink)">${value}</text>
     <text x="32" y="45" text-anchor="middle" font-size="9" fill="var(--mut)">/ ${goal}</text>
-  </svg><div class="ring-lab">${emoji} ${label}</div></div>`;
+  </svg><div class="ring-lab"><span style="color:${color}">${icon(emoji)}</span> ${label}</div></div>`;
 }
 
 /* ============ VIEWS ============ */
 const App={tab:"dash", effMode:"pat", exSel:null, distSel:null};
 function render(){
   document.querySelectorAll("#tabbar button").forEach(b=>b.classList.toggle("on", b.dataset.act===("tab:"+App.tab)));
-  const st=currentStreak(); $("#flame").innerHTML=`🔥 ${st} Wo.`;
+  const st=currentStreak(); $("#flame").innerHTML=`${icon('flame')} ${st} Wo.`;
   const v=$("#view");
   if(App.tab==="dash") v.innerHTML=viewDash();
   else if(App.tab==="run"){ v.innerHTML=viewRun(); mountRun(); }
@@ -473,34 +513,34 @@ function viewDash(){
   let html="";
   const pend=stravaPendingCount();
   if(pend>0){
-    html+=`<div class="banner" data-act="tab:more"><span class="e">🟧</span><div>
+    html+=`<div class="banner" data-act="tab:more"><span class="e" style="color:var(--accent)">${icon('repeat')}</span><div>
       <div style="font-weight:800">${pend} neue Aktivität${pend===1?"":"en"} bereit</div>
       <div class="small muted">In „Mehr" Bereich wählen & importieren →</div></div></div>`;
   } else if(!s.onboarded){
-    html+=`<div class="banner" data-act="onboard"><span class="e">👋</span><div>
-      <div style="font-weight:800">Willkommen, ${s.athlete?esc(s.athlete):"Mausi"}! 🐭</div>
+    html+=`<div class="banner" data-act="onboard"><span class="e" style="color:var(--accent)">${icon('settings')}</span><div>
+      <div style="font-weight:800">Willkommen, ${s.athlete?esc(s.athlete):"Mausi"}</div>
       <div class="small muted">Kurz einrichten: <b>Zone-2-Ziel-Puls</b> + optional <b>Strava verbinden</b> (Apple-Watch-Workouts automatisch). Tippen →</div></div></div>`;
   }
   // Wochenplan — was fehlt noch (zum "dranhängeln")
   { const plan=weekPlan(); const open=plan.filter(i=>i.done<i.target), doneI=plan.filter(i=>i.done>=i.target);
     html+=`<h2 class="sec">Diese Woche – das fehlt dir noch</h2><div class="card">`;
-    if(!open.length){ html+=`<div class="center" style="padding:6px 0"><div style="font-size:30px">🎉</div><div style="font-weight:800">Wochenziel erreicht!</div><div class="small muted">Alles geschafft — stark, ${esc(s.athlete||"Mausi")}.</div></div>`; }
+    if(!open.length){ html+=`<div class="center" style="padding:6px 0"><div style="font-size:30px;color:var(--good)">${icon('check')}</div><div style="font-weight:800">Wochenziel erreicht!</div><div class="small muted">Alles geschafft — stark, ${esc(s.athlete||"Mausi")}.</div></div>`; }
     else { html+=open.map(i=>`<div class="item" data-act="${i.act}"${i.unit?` data-unit="${esc(i.unit)}"`:""} style="cursor:pointer">
-        <div class="ic">${i.emoji}</div><div class="grow"><div class="t">${esc(i.name)}</div>
+        <div class="ic">${icon(i.icon)}</div><div class="grow"><div class="t">${esc(i.name)}</div>
         <div class="s">noch <b>${i.target-i.done}×</b> · ${i.done}/${i.target} diese Woche</div></div>
         <span class="tag">+ eintragen</span></div>`).join("");
-      if(doneI.length) html+=`<div class="hint" style="margin-top:8px">✓ erledigt: ${doneI.map(i=>esc(i.name)+" "+i.done+"/"+i.target).join(" · ")}</div>`;
+      if(doneI.length) html+=`<div class="hint" style="margin-top:8px"><span style="color:var(--good)">${icon('check')}</span> erledigt: ${doneI.map(i=>esc(i.name)+" "+i.done+"/"+i.target).join(" · ")}</div>`;
     }
     html+=`</div>`;
   }
   // Diese Woche — alle drei Sparten gleichwertig
   html+=`<h2 class="sec">Diese Woche</h2><div class="card"><div class="rings">
-    ${ring(tw.run,s.targets.run,"Lauf","🏃‍♀️","var(--accent)")}
-    ${ring(tw.gym,s.targets.gym,"Kraft","🏋️‍♀️","var(--accent2)")}
-    ${ring(tw.la,s.targets.la,"LA","⚡","var(--warn)")}
+    ${ring(tw.run,s.targets.run,"Lauf","run","var(--accent)")}
+    ${ring(tw.gym,s.targets.gym,"Kraft","dumbbell","var(--accent2)")}
+    ${ring(tw.la,s.targets.la,"LA","la","var(--warn)")}
   </div>
   <div class="between" style="margin-top:12px; padding-top:11px; border-top:1px solid var(--line)">
-    <span class="small"><b>🔥 ${streak}</b> <span class="muted">Streak</span></span>
+    <span class="small"><b><span style="color:var(--accent)">${icon('flame')}</span> ${streak}</b> <span class="muted">Streak</span></span>
     <span class="small"><b>${fmtH(load.sec)}</b> <span class="muted">Zeit</span></span>
     <span class="small"><b>${load.avgHr||"–"}</b> <span class="muted">Ø-Puls</span></span>
     <span class="small"><b>${load.sessions}</b> <span class="muted">Einheiten</span></span>
@@ -516,20 +556,20 @@ function viewDash(){
   { const wi=weightInfo(), ci=s.cycleOn?cycleInfo():null;
     html+=`<h2 class="sec">Körper${s.cycleOn?" & Zyklus":""}</h2><div class="card" data-act="tab:body" style="cursor:pointer">
       <div class="between">
-        <div><div class="small muted" style="font-weight:700">⚖️ Gewicht</div>
+        <div><div class="small muted" style="font-weight:700;display:flex;align-items:center;gap:6px"><span style="font-size:15px">${icon('scale')}</span> Gewicht</div>
           <div style="font-size:22px;font-weight:800;margin-top:3px">${wi?wi.latest.toFixed(1).replace(".",",")+" kg":'<span class="muted" style="font-size:15px">eintragen →</span>'}</div>
           ${wi&&Math.abs(wi.deltaTotal)>=0.1?`<div class="small ${wi.deltaTotal<0?'pr':'muted'}">${wi.deltaTotal>0?"+":""}${wi.deltaTotal.toFixed(1).replace(".",",")} kg seit Start</div>`:""}</div>
-        ${ci?`<div style="text-align:right"><div class="small muted" style="font-weight:700">${ci.emoji} Zyklus</div>
+        ${ci?`<div style="text-align:right"><div class="small muted" style="font-weight:700"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${ci.color};vertical-align:1px"></span> Zyklus</div>
           <div style="font-size:17px;font-weight:800;margin-top:3px">${ci.phase}</div>
           <div class="small muted">Tag ${ci.cycleDay} · Periode in ${ci.daysToNext>=0?ci.daysToNext+" T":"überfällig"}</div></div>`:(s.cycleOn?`<div class="small muted" style="align-self:center">Zyklus →</div>`:"")}
       </div></div>`;
   }
   // quick add
   html+=`<h2 class="sec">Schnell eintragen</h2><div class="qa" style="grid-template-columns:repeat(4,1fr)">
-    <button data-act="add-run"><span class="e">🏃‍♀️</span>Lauf</button>
-    <button data-act="add-gym"><span class="e">🏋️‍♀️</span>Kraft</button>
-    <button data-act="add-la"><span class="e">⚡</span>LA</button>
-    <button data-act="add-other"><span class="e">🤸‍♀️</span>Sonstige</button>
+    <button data-act="add-run"><span class="e">${icon('run')}</span>Lauf</button>
+    <button data-act="add-gym"><span class="e">${icon('dumbbell')}</span>Kraft</button>
+    <button data-act="add-la"><span class="e">${icon('la')}</span>LA</button>
+    <button data-act="add-other"><span class="e">${icon('other')}</span>Sonstige</button>
   </div>`;
   // recent
   const recent=[...DB.runs.map(r=>({...r,_t:"run"})),...DB.gym.map(r=>({...r,_t:"gym"})),...DB.la.map(r=>({...r,_t:"la"})),...DB.other.map(r=>({...r,_t:"other"}))]
@@ -545,31 +585,31 @@ function consistencyChart(){
 }
 function itemRow(r){
   if(r._t==="run"){ const p=runPace(r);
-    return `<div class="item"><div class="ic">🏃‍♀️</div><div class="grow">
+    return `<div class="item"><div class="ic">${icon('run')}</div><div class="grow">
       <div class="t">Zone-2-Lauf · ${r.distKm} km</div>
       <div class="s">${fmtDateLong(r.date)} · ${fmtPace(p)}/km · ⌀ ${r.avgHr||"–"} bpm</div></div>
-      <button class="iconbtn" data-act="edit-run:${r.id}">✏️</button></div>`; }
+      <button class="iconbtn" data-act="edit-run:${r.id}">${icon('pencil')}</button></div>`; }
   if(r._t==="gym"){ const nex=(r.exercises||[]).length, vol=gymVolume(r);
     const extra=`${vol>0?Math.round(vol)+" kg":"HF/Zeit"}${r.durSec?" · "+fmtH(r.durSec):""}${r.avgHr?" · ⌀"+r.avgHr+" bpm":""}`;
-    return `<div class="item"><div class="ic" style="background:var(--accent-soft);color:var(--accent2)">🏋️‍♀️</div><div class="grow">
+    return `<div class="item"><div class="ic" style="color:var(--accent2)">${icon('dumbbell')}</div><div class="grow">
       <div class="t">Kraft${nex?" · "+nex+" Übung"+(nex===1?"":"en"):""}</div>
       <div class="s">${fmtDateLong(r.date)} · ${extra}</div></div>
-      <button class="iconbtn" data-act="edit-gym:${r.id}">✏️</button></div>`; }
-  if(r._t==="other"){ return `<div class="item"><div class="ic" style="background:#e7e9ff;color:var(--accent2)">🤸‍♀️</div><div class="grow">
+      <button class="iconbtn" data-act="edit-gym:${r.id}">${icon('pencil')}</button></div>`; }
+  if(r._t==="other"){ return `<div class="item"><div class="ic" style="color:var(--accent2)">${icon('other')}</div><div class="grow">
     <div class="t">${esc(r.name||"Sonstige")}</div>
     <div class="s">${fmtDateLong(r.date)}${r.durMin?" · "+r.durMin+" min":""}${r.avgHr?" · ⌀"+r.avgHr+" bpm":""}${r.note?" · "+esc(r.note):""}</div></div>
-    <button class="iconbtn" data-act="edit-other:${r.id}">✏️</button></div>`; }
+    <button class="iconbtn" data-act="edit-other:${r.id}">${icon('pencil')}</button></div>`; }
   const foc=(r.focuses||[]).slice(0,2).join(", ")+((r.focuses||[]).length>2?"…":"");
-  return `<div class="item"><div class="ic" style="background:#fff3d6;color:var(--warn)">⚡</div><div class="grow">
+  return `<div class="item"><div class="ic" style="color:var(--warn)">${icon('la')}</div><div class="grow">
     <div class="t">LA · ${esc(foc||"Einheit")}</div>
     <div class="s">${fmtDateLong(r.date)}${r.durMin?" · "+r.durMin+" min":""}${r.avgHr?" · ⌀"+r.avgHr+" bpm":""}${(r.results||[]).length?" · "+r.results.length+" Zeit(en)":""}</div></div>
-    <button class="iconbtn" data-act="edit-la:${r.id}">✏️</button></div>`;
+    <button class="iconbtn" data-act="edit-la:${r.id}">${icon('pencil')}</button></div>`;
 }
 
 /* ---- LAUF ---- */
 function viewRun(){
   const runs=[...DB.runs].sort((a,b)=>a.date<b.date?-1:1);
-  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">🏃‍♀️ Zone-2-Lauf</h2>
+  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">Zone-2-Lauf</h2>
     <button class="btn btn-sm" data-act="add-run">+ Lauf</button></div>`;
   if(!runs.length){ html+=`<div class="card">${emptyChart('Noch kein Lauf — tippe „+ Lauf" und lies Pace/Puls von der Uhr ab.')}</div>`; return html; }
   const t=DB.settings.zone2Target, eff=effSummary();
@@ -606,11 +646,11 @@ function viewRun(){
   // list
   html+=`<h2 class="sec">Alle Läufe</h2><div class="card">`;
   html+=[...runs].reverse().map(r=>{ const p=runPace(r), pat=paceAtTarget(r,t), inZone=r.avgHr&&r.avgHr<=t;
-    return `<div class="item"><div class="ic">🏃‍♀️</div><div class="grow">
+    return `<div class="item"><div class="ic">${icon('run')}</div><div class="grow">
       <div class="t">${r.distKm} km · ${fmtPace(p)}/km</div>
       <div class="s">${fmtDateLong(r.date)} · ⌀${r.avgHr||"–"}${r.maxHr?"/"+r.maxHr:""} bpm ${inZone?'<span class="tag g">in Zone</span>':r.avgHr?'<span class="tag">über Ziel</span>':''}</div>
       <div class="s">Pace @${t}: <b>${fmtPace(pat)}</b> · EF ${runEF(r)?runEF(r).toFixed(1):"–"}${r.note?" · "+esc(r.note):""}</div></div>
-      <button class="iconbtn" data-act="edit-run:${r.id}">✏️</button></div>`; }).join("");
+      <button class="iconbtn" data-act="edit-run:${r.id}">${icon('pencil')}</button></div>`; }).join("");
   html+=`</div>`;
   return html;
 }
@@ -632,7 +672,7 @@ function exerciseHistory(name){
   return out.sort((a,b)=>a.date<b.date?-1:1);
 }
 function viewGym(){
-  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">🏋️‍♀️ Kraft / Studio</h2>
+  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">Kraft / Studio</h2>
     <button class="btn btn-sm" data-act="add-gym">+ Einheit</button></div>`;
   const names=exerciseNames();
   if(!DB.gym.length){ html+=`<div class="card">${emptyChart("Noch keine Kraft-Einheit. Übung + Gewicht + Sätze eintragen – der Verlauf je Übung baut sich automatisch auf.")}</div>`; return html; }
@@ -652,17 +692,17 @@ function viewGym(){
       </div>`; }
     html+=`</div>`;
   } else {
-    html+=`<div class="card"><div class="hint" style="margin:0">Diese Einheiten haben HF + Zeit (z. B. aus Strava), aber noch keine Übungen. Tippe unten auf ✏️ und ergänze Übung + Gewicht + Wdh — dann baut sich der Kraft-Verlauf auf.</div></div>`;
+    html+=`<div class="card"><div class="hint" style="margin:0">Diese Einheiten haben HF + Zeit (z. B. aus Strava), aber noch keine Übungen. Tippe unten auf ${icon('pencil')} und ergänze Übung + Gewicht + Wdh — dann baut sich der Kraft-Verlauf auf.</div></div>`;
   }
   html+=`<h2 class="sec">Alle Einheiten</h2><div class="card">`;
   html+=[...DB.gym].sort((a,b)=>a.date<b.date?1:-1).map(s=>{
     const vol=gymVolume(s);
     const head=`${fmtDateLong(s.date)}${vol>0?" · "+Math.round(vol)+" kg":""}${s.durSec?" · "+fmtH(s.durSec):""}${s.avgHr?" · ⌀"+s.avgHr+(s.maxHr?"/"+s.maxHr:"")+" bpm":""}`;
     const exs=(s.exercises||[]).map(e=>`${esc(e.name)} <span class="muted">(${(e.sets||[]).map(st=>`${st.kg??"?"}×${st.reps??"?"}`).join(", ")})</span>`).join("<br>");
-    return `<div class="item"><div class="ic" style="background:var(--accent-soft);color:var(--accent2)">🏋️‍♀️</div><div class="grow">
+    return `<div class="item"><div class="ic" style="color:var(--accent2)">${icon('dumbbell')}</div><div class="grow">
       <div class="t">${head}</div>
       <div class="s">${exs||(s.note?esc(s.note):"HF/Zeit erfasst")}</div></div>
-      <button class="iconbtn" data-act="edit-gym:${s.id}">✏️</button></div>`;
+      <button class="iconbtn" data-act="edit-gym:${s.id}">${icon('pencil')}</button></div>`;
   }).join("");
   html+=`</div>`;
   return html;
@@ -671,7 +711,7 @@ function mountGym(){}
 
 /* ---- LEICHTATHLETIK ---- */
 function viewLA(){
-  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">⚡ Leichtathletik</h2>
+  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">Leichtathletik</h2>
     <button class="btn btn-sm" data-act="add-la">+ Einheit</button></div>`;
   if(!DB.la.length){ html+=`<div class="card">${emptyChart("Noch keine LA-Einheit. Schwerpunkt(e) wählen, Sprint-Zeiten optional – pro Schwerpunkt baut sich eine Historie auf.")}</div>`; return html; }
   // sprint times per distance
@@ -696,10 +736,10 @@ function viewLA(){
   html+=[...DB.la].sort((a,b)=>a.date<b.date?1:-1).map(s=>{
     const tags=(s.focuses||[]).map(f=>`<span class="tag">${esc(f)}</span>`).join("");
     const res=(s.results||[]).map(r=>`${esc(r.label)}: <b>${r.sec}s</b>`).join(" · ");
-    return `<div class="item"><div class="ic" style="background:#fff3d6;color:var(--warn)">⚡</div><div class="grow">
+    return `<div class="item"><div class="ic" style="color:var(--warn)">${icon('la')}</div><div class="grow">
       <div class="t">${fmtDateLong(s.date)}${s.durMin?` · ${s.durMin} min`:""}${s.avgHr?` · ⌀${s.avgHr}${s.maxHr?"/"+s.maxHr:""} bpm`:""}${s.rpe?` · RPE ${s.rpe}`:""}</div>
       <div class="s">${tags||"–"}</div>${res?`<div class="s">${res}</div>`:""}${s.note?`<div class="s muted">${esc(s.note)}</div>`:""}</div>
-      <button class="iconbtn" data-act="edit-la:${s.id}">✏️</button></div>`;
+      <button class="iconbtn" data-act="edit-la:${s.id}">${icon('pencil')}</button></div>`;
   }).join("");
   html+=`</div>`;
   return html;
@@ -709,8 +749,8 @@ function mountLA(){}
 /* ---- KÖRPER (Gewicht + Zyklus) ---- */
 function viewBody(){
   const s=DB.settings, wi=weightInfo();
-  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">⚖️ Körper${s.cycleOn?" & Zyklus":""}</h2>
-    <div class="row"><button class="btn btn-sm" data-act="add-weight">+ Gewicht</button>${s.cycleOn?`<button class="btn sec btn-sm" data-act="add-cycle">🩸 Periode</button>`:""}</div></div>`;
+  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">Körper${s.cycleOn?" & Zyklus":""}</h2>
+    <div class="row"><button class="btn btn-sm" data-act="add-weight">+ Gewicht</button>${s.cycleOn?`<button class="btn sec btn-sm" data-act="add-cycle"><span style="display:inline-flex;gap:5px;align-items:center">${icon('droplet')} Periode</span></button>`:""}</div></div>`;
   if(wi){ const w=wi.series;
     html+=`<div class="card">
       <div class="between"><div><div class="small muted" style="font-weight:700">Aktuelles Gewicht</div>
@@ -719,7 +759,7 @@ function viewBody(){
       <div style="margin-top:10px">${lineChart({rows:[{ys:w.map(x=>num(x.kg)), color:"var(--accent)"}], xLabels:w.map(x=>fmtDateShort(x.date)), yFmt:v=>v.toFixed(1), empty:"Mind. 2 Werte für den Verlauf."})}</div>
       <div class="hint center">Gewichts-Verlauf${s.cycleOn?" — zyklusbedingte Schwankungen sind normal":""}</div></div>`;
     html+=`<div class="card"><div class="small muted" style="font-weight:700;margin-bottom:4px">Einträge</div>`+
-      [...w].reverse().slice(0,10).map(x=>`<div class="kv"><span>${fmtDateLong(x.date)}${x.note?` · <span class="muted">${esc(x.note)}</span>`:""}</span><span><b>${num(x.kg).toFixed(1).replace(".",",")} kg</b> <button class="iconbtn" data-act="del-weight:${x.id}">🗑</button></span></div>`).join("")+`</div>`;
+      [...w].reverse().slice(0,10).map(x=>`<div class="kv"><span>${fmtDateLong(x.date)}${x.note?` · <span class="muted">${esc(x.note)}</span>`:""}</span><span><b>${num(x.kg).toFixed(1).replace(".",",")} kg</b> <button class="iconbtn" data-act="del-weight:${x.id}">${icon('trash')}</button></span></div>`).join("")+`</div>`;
   } else {
     html+=`<div class="card">${emptyChart('Noch kein Gewicht erfasst. Tippe „+ Gewicht" — der Verlauf baut sich auf.')}</div>`;
   }
@@ -727,24 +767,23 @@ function viewBody(){
     const ci=cycleInfo();
     if(ci){
       html+=`<h2 class="sec">Zyklus</h2><div class="card">
-        <div class="between"><div><div style="font-size:26px">${ci.emoji}</div>
-          <div style="font-size:20px;font-weight:800">${ci.phase}</div>
+        <div class="between"><div><div style="font-size:21px;font-weight:800;display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:${ci.color}"></span>${ci.phase}</div>
           <div class="small muted">Zyklustag ${ci.cycleDay} · Ø-Länge ${ci.avg} Tage</div></div>
           <div style="text-align:right"><div style="font-size:22px;font-weight:800">${ci.daysToNext>=0?ci.daysToNext:0}</div>
           <div class="small muted">Tage bis Periode${ci.daysToNext<0?" (überfällig)":""}</div>
           <div class="small muted">~ ${fmtDateShort(ci.nextStart)}</div></div></div>
-        <div class="hint" style="margin-top:10px">${ci.emoji} ${ci.hint}</div></div>`;
+        <div class="hint" style="margin-top:10px">${ci.hint}</div></div>`;
       const starts=cycleStarts();
       if(starts.length>=2){ const gaps=[],labs=[]; for(let i=1;i<starts.length;i++){ gaps.push(Math.round((parseD(starts[i])-parseD(starts[i-1]))/86400000)); labs.push(fmtDateShort(starts[i])); }
         html+=`<div class="card tight">${barChart({labels:labs, values:gaps, color:"var(--accent2)", valFmt:v=>v, h:130, empty:"–"})}<div class="hint center">Zykluslänge (Tage)</div></div>`; }
       html+=`<div class="card"><div class="small muted" style="font-weight:700;margin-bottom:4px">Perioden-Log</div>`+
-        (starts.slice().reverse().slice(0,8).map(d=>`<div class="kv"><span>🩸 ${fmtDateLong(d)}</span><button class="iconbtn" data-act="del-cycle:${d}">🗑</button></div>`).join("")||`<div class="small muted">Noch nichts geloggt.</div>`)+`</div>`;
+        (starts.slice().reverse().slice(0,8).map(d=>`<div class="kv"><span><span style="color:#e0566b">${icon('droplet')}</span> ${fmtDateLong(d)}</span><button class="iconbtn" data-act="del-cycle:${d}">${icon('trash')}</button></div>`).join("")||`<div class="small muted">Noch nichts geloggt.</div>`)+`</div>`;
     } else {
-      html+=`<h2 class="sec">Zyklus</h2><div class="card"><div class="hint" style="margin:0">Tippe „🩸 Periode", wenn deine Periode beginnt. Nach 2 Einträgen erscheinen Phase, Ø-Zykluslänge und die Vorhersage der nächsten Periode — die App ordnet Gewichts- & Leistungsschwankungen dann der Phase zu.</div></div>`;
+      html+=`<h2 class="sec">Zyklus</h2><div class="card"><div class="hint" style="margin:0">Tippe „Periode", wenn deine Periode beginnt. Nach 2 Einträgen erscheinen Phase, Ø-Zykluslänge und die Vorhersage der nächsten Periode — die App ordnet Gewichts- & Leistungsschwankungen dann der Phase zu.</div></div>`;
     }
     html+=`<div class="card"><button class="btn ghost btn-sm" data-act="cycle-off">Zyklus-Tracking ausblenden</button></div>`;
   } else {
-    html+=`<div class="card"><button class="btn sec" data-act="cycle-on">🩸 Zyklus-Tracking aktivieren</button><div class="hint">Optional — hilft, Gewicht, Energie & Leistung über den Zyklus einzuordnen.</div></div>`;
+    html+=`<div class="card"><button class="btn sec" data-act="cycle-on"><span style="display:inline-flex;gap:6px;align-items:center">${icon('droplet')} Zyklus-Tracking aktivieren</span></button><div class="hint">Optional — hilft, Gewicht, Energie & Leistung über den Zyklus einzuordnen.</div></div>`;
   }
   return html;
 }
@@ -765,7 +804,7 @@ function viewMore(){
     <input id="set-z2" inputmode="numeric" value="${s.zone2Target}">
     <div class="row" style="margin-top:10px">
       <div class="field grow"><label class="f">Alter (für 180−Alter / MAF)</label><input id="set-age" inputmode="numeric" value="${s.age||""}" placeholder="z. B. 29"></div>
-      <div class="field" style="align-self:flex-end"><button class="btn sec btn-sm" data-act="apply-maf" style="white-space:nowrap">180 − Alter ↵</button></div>
+      <div class="field" style="align-self:flex-end"><button class="btn sec btn-sm" data-act="apply-maf" style="white-space:nowrap">180 − Alter</button></div>
     </div>
     <label class="f">Max-Puls (optional)</label>
     <input id="set-hrmax" inputmode="numeric" value="${s.hrMax||""}" placeholder="z. B. 192">
@@ -786,7 +825,7 @@ function viewMore(){
   <h2 class="sec">Wiederkehrende Einheiten</h2>
   <div class="card">
     <div class="hint" style="margin-top:0">Erscheinen im Wochenplan („noch X×"). Z. B. Padel 1×, Mobility 2×. Abhaken = als „Sonstige" mit gleichem Namen eintragen.</div>
-    ${(s.weeklyUnits||[]).length? `<div style="margin:8px 0">`+s.weeklyUnits.map(u=>`<div class="kv"><span>${esc(u.emoji||"🔁")} ${esc(u.name)}</span><span><b>${u.target||1}×/Wo</b> <button class="iconbtn" data-act="del-unit:${u.id}">🗑</button></span></div>`).join("")+`</div>` : ""}
+    ${(s.weeklyUnits||[]).length? `<div style="margin:8px 0">`+s.weeklyUnits.map(u=>`<div class="kv"><span><span style="color:var(--mut)">${icon('repeat')}</span> ${esc(u.name)}</span><span><b>${u.target||1}×/Wo</b> <button class="iconbtn" data-act="del-unit:${u.id}">${icon('trash')}</button></span></div>`).join("")+`</div>` : ""}
     <div class="row" style="margin-top:6px">
       <input id="u-name" placeholder="Name (z. B. Padel)" style="flex:2">
       <input id="u-target" inputmode="numeric" placeholder="×/Wo" value="1" style="flex:1; max-width:80px">
@@ -796,13 +835,13 @@ function viewMore(){
 
   <h2 class="sec">LA-Schwerpunkte</h2>
   <div class="card">
-    <div class="chips" style="margin-bottom:10px">${s.laFocuses.map(f=>`<span class="chip on" data-act="del-focus:${encodeURIComponent(f)}">${esc(f)} ✕</span>`).join("")}</div>
+    <div class="chips" style="margin-bottom:10px">${s.laFocuses.map(f=>`<span class="chip on" data-act="del-focus:${encodeURIComponent(f)}">${esc(f)} ${icon('x')}</span>`).join("")}</div>
     <div class="row"><input id="new-focus" placeholder="Schwerpunkt hinzufügen"><button class="btn sec btn-sm" data-act="add-focus">+</button></div>
   </div>
 
   <h2 class="sec">Sprint-Distanzen</h2>
   <div class="card">
-    <div class="chips" style="margin-bottom:10px">${s.sprintPresets.map(f=>`<span class="chip on" data-act="del-preset:${encodeURIComponent(f)}">${esc(f)} ✕</span>`).join("")}</div>
+    <div class="chips" style="margin-bottom:10px">${s.sprintPresets.map(f=>`<span class="chip on" data-act="del-preset:${encodeURIComponent(f)}">${esc(f)} ${icon('x')}</span>`).join("")}</div>
     <div class="row"><input id="new-preset" placeholder="z. B. 80m"><button class="btn sec btn-sm" data-act="add-preset">+</button></div>
   </div>
 
@@ -810,9 +849,9 @@ function viewMore(){
   ${(function(){ const sv=DB.strava||{}; const pend=sv.pending||[]; return `
   <div class="card">
     ${stravaConnected() ? `
-      <div class="kv"><span>Verbunden${sv.athlete?" · "+esc(sv.athlete):""}</span><span class="pr">✓</span></div>
+      <div class="kv"><span>Verbunden${sv.athlete?" · "+esc(sv.athlete):""}</span><span class="pr">${icon('check')}</span></div>
       <div class="kv"><span>Letzter Sync</span><b>${fmtAgo(sv.lastFetch)}</b></div>
-      <button class="btn sec" data-act="strava-sync" style="margin-top:12px">↻ Jetzt synchronisieren</button>
+      <button class="btn sec" data-act="strava-sync" style="margin-top:12px"><span style="display:inline-flex;gap:6px;align-items:center">${icon('repeat')} Jetzt synchronisieren</span></button>
       <button class="btn ghost" data-act="strava-disconnect" style="margin-top:9px">Strava trennen</button>
     ` : `
       <div class="hint" style="margin-top:0">Verbinde Strava, damit Apple-Watch-Workouts automatisch reinkommen: <b>Läufe</b> mit Pace/Puls (+ „Zeit im Ziel-Puls"), <b>Kraft/LA</b> mit HF + Zeit. Client-ID & Secret unter <b>strava.com/settings/api</b> — du kannst <b>dieselben wie in SUB4</b> nehmen (gleiche github.io-Domain).</div>
@@ -820,8 +859,8 @@ function viewMore(){
       <label class="f">Client-Secret</label><input id="s_cs" value="${esc(sv.clientSecret||"")}" placeholder="aus Strava-API-Einstellungen">
       <button class="btn" data-act="strava-connect" style="margin-top:12px">Mit Strava verbinden</button>
     `}
-    <button class="btn ghost" data-act="file-import" style="margin-top:9px">⬆︎ GPX/TCX-Datei importieren</button>
-    <button class="btn ghost" data-act="json-import" style="margin-top:9px">⬆︎ Apple Health (JSON aus Kurzbefehl)</button>
+    <button class="btn ghost" data-act="file-import" style="margin-top:9px"><span style="display:inline-flex;gap:6px;align-items:center">${icon('upload')} GPX/TCX-Datei importieren</span></button>
+    <button class="btn ghost" data-act="json-import" style="margin-top:9px"><span style="display:inline-flex;gap:6px;align-items:center">${icon('upload')} Apple Health (JSON aus Kurzbefehl)</span></button>
     <div class="hint">Apple Health hat keinen direkten Web-Zugriff — der Kurzbefehl liest Workouts + Gewicht aus Health und übergibt sie als JSON. Gewichte/Sätze/Wdh &amp; Sprint-Zeiten erfasst die Watch nicht — die ergänzt du manuell.</div>
   </div>
   ${pend.length ? `<div class="card"><div class="small muted" style="font-weight:700;margin-bottom:4px">Bereit zum Import (${pend.length})</div>${pend.map(pendRow).join("")}</div>` : ""}
@@ -832,13 +871,13 @@ function viewMore(){
     <div class="kv"><span>Läufe / Kraft / LA</span><b>${DB.runs.length} / ${DB.gym.length} / ${DB.la.length}</b></div>
     <div class="kv"><span>Backups</span><b>${listBackups().length}</b></div>
     <div style="display:flex; flex-direction:column; gap:9px; margin-top:12px">
-      <button class="btn ghost" data-act="export">⬇︎ Export (JSON)</button>
-      <button class="btn ghost" data-act="import">⬆︎ Import (JSON)</button>
-      ${hasContent(DB)?"":'<button class="btn sec" data-act="demo">✨ Demo-Daten laden (zum Ausprobieren)</button>'}
+      <button class="btn ghost" data-act="export">Export (JSON)</button>
+      <button class="btn ghost" data-act="import">Import (JSON)</button>
+      ${hasContent(DB)?"":'<button class="btn sec" data-act="demo">Demo-Daten laden (zum Ausprobieren)</button>'}
       <button class="btn danger" data-act="reset">Alle Daten löschen</button>
     </div>
   </div>
-  <div class="center muted small" style="margin:18px 0">GoMausi v3.0 🐭 · Gym · LA · Lauf · Gewicht/Zyklus · Strava+Health-Import · lokal & offline</div>
+  <div class="center muted small" style="margin:18px 0">GoMausi v3.0 · Gym · LA · Lauf · Gewicht/Zyklus · Strava + Health-Import · lokal & offline</div>
   `;
 }
 function mountMore(){
@@ -879,7 +918,7 @@ function openRunSheet(existing){
     <label class="f">Zeit im Ziel-Puls (Min, optional)</label><input id="r-zone" inputmode="numeric" value="${r.zoneMin||""}" placeholder="von der Uhr, optional">
     <label class="f">Notiz</label><textarea id="r-note" placeholder="Gefühl, Strecke …">${esc(r.note||"")}</textarea>
     <div style="display:flex; gap:9px; margin-top:16px">
-      ${existing?`<button class="btn danger" data-act="del-run:${existing.id}" style="flex:0 0 auto">🗑</button>`:""}
+      ${existing?`<button class="btn danger" data-act="del-run:${existing.id}" style="flex:0 0 auto">${icon('trash')}</button>`:""}
       <button class="btn" data-act="save-run" data-id="${existing?existing.id:""}">Speichern</button>
     </div>
   `);
@@ -899,7 +938,7 @@ function saveRun(id){
   // instant feedback
   const t=DB.settings.zone2Target, pat=paceAtTarget(rec,t);
   let msg=`Lauf gespeichert · Pace @${t}: ${fmtPace(pat)}`;
-  if(prevEff&&prevEff.rPat&&pat){ const d=(prevEff.rPat-pat)/prevEff.rPat*100; if(d>1) msg=`Stark! ${fmtPace(pat)} @${t} – ${d.toFixed(1)}% schneller als zuletzt 🎉`; }
+  if(prevEff&&prevEff.rPat&&pat){ const d=(prevEff.rPat-pat)/prevEff.rPat*100; if(d>1) msg=`Stark – ${fmtPace(pat)} @${t}, ${d.toFixed(1)}% schneller als zuletzt`; }
   toast(msg);
 }
 
@@ -921,7 +960,7 @@ function openGymSheet(existing){
     </div>
     <label class="f">Notiz</label><textarea id="g-note" placeholder="…">${esc(existing?existing.note||"":"")}</textarea>
     <div style="display:flex; gap:9px; margin-top:16px">
-      ${existing?`<button class="btn danger" data-act="del-gym:${existing.id}" style="flex:0 0 auto">🗑</button>`:""}
+      ${existing?`<button class="btn danger" data-act="del-gym:${existing.id}" style="flex:0 0 auto">${icon('trash')}</button>`:""}
       <button class="btn" data-act="save-gym" data-id="${existing?existing.id:""}">Speichern</button>
     </div>
   `, ()=>renderGx());
@@ -943,13 +982,13 @@ function renderGx(){
     <div class="exblock" data-ex="${i}">
       <div class="row" style="margin-bottom:8px">
         <input class="grow" data-namefield list="exNames" placeholder="Übung (z. B. Kniebeuge)" value="${esc(e.name)}">
-        <button class="iconbtn" data-act="gym-load:${i}" title="letzte Werte">↺</button>
-        <button class="iconbtn" data-act="gym-del-ex:${i}">🗑</button>
+        <button class="iconbtn" data-act="gym-load:${i}" title="letzte Werte übernehmen">${icon('repeat')}</button>
+        <button class="iconbtn" data-act="gym-del-ex:${i}">${icon('trash')}</button>
       </div>
       ${(e.sets||[]).map((st,j)=>`<div class="setrow">
         <input data-f="kg" inputmode="decimal" placeholder="kg" value="${st.kg!==undefined&&st.kg!==null?esc(st.kg):""}">
         <input data-f="reps" inputmode="numeric" placeholder="Wdh" value="${st.reps!==undefined&&st.reps!==null?esc(st.reps):""}">
-        <button class="iconbtn" data-act="gym-del-set:${i}.${j}">✕</button>
+        <button class="iconbtn" data-act="gym-del-set:${i}.${j}">${icon('x')}</button>
       </div>`).join("")}
       <button class="btn sec btn-sm" data-act="gym-add-set:${i}" style="width:100%; margin-top:2px">+ Satz</button>
     </div>`).join("");
@@ -964,7 +1003,7 @@ function saveGym(id){
   const rec={ id:id||uid(), date:$("#g-date").value||todayISO(), note:$("#g-note").value.trim(), exercises,
     durSec:durMin?Math.round(durMin*60):null, avgHr:gAhr?Math.round(gAhr):null, maxHr:gMhr?Math.round(gMhr):null };
   if(id){ const i=DB.gym.findIndex(x=>x.id===id); if(i>=0)DB.gym[i]=rec; } else DB.gym.push(rec);
-  save(); closeSheet(); App.tab="gym"; render(); toast("Kraft-Einheit gespeichert 💪");
+  save(); closeSheet(); App.tab="gym"; render(); toast("Kraft-Einheit gespeichert");
 }
 
 /* LA form */
@@ -991,7 +1030,7 @@ function openLASheet(existing){
     </div>
     <label class="f">Notiz</label><textarea id="l-note" placeholder="Übungen, Technik-Fokus …">${esc(existing?existing.note||"":"")}</textarea>
     <div style="display:flex; gap:9px; margin-top:16px">
-      ${existing?`<button class="btn danger" data-act="del-la:${existing.id}" style="flex:0 0 auto">🗑</button>`:""}
+      ${existing?`<button class="btn danger" data-act="del-la:${existing.id}" style="flex:0 0 auto">${icon('trash')}</button>`:""}
       <button class="btn" data-act="save-la" data-id="${existing?existing.id:""}">Speichern</button>
     </div>
   `, ()=>renderLR());
@@ -1005,7 +1044,7 @@ function renderLR(){
   wrap.innerHTML=laR.map((r,i)=>`<div class="setrow">
     <input data-f="label" list="distList" placeholder="Distanz" value="${esc(r.label||"")}">
     <input data-f="sec" inputmode="decimal" placeholder="Sek" value="${esc(r.sec||"")}">
-    <button class="iconbtn" data-act="la-del-res:${i}">✕</button>
+    <button class="iconbtn" data-act="la-del-res:${i}">${icon('x')}</button>
   </div>`).join("")+`<datalist id="distList">${presets.map(p=>`<option value="${esc(p)}">`).join("")}</datalist>`;
 }
 function saveLA(id){
@@ -1017,7 +1056,7 @@ function saveLA(id){
     rpe:num($("#l-rpe").value)||null, durMin:num($("#l-dur").value)||null,
     avgHr:num($("#l-ahr").value)||null, maxHr:num($("#l-mhr").value)||null, note:$("#l-note").value.trim() };
   if(id){ const i=DB.la.findIndex(x=>x.id===id); if(i>=0)DB.la[i]=rec; } else DB.la.push(rec);
-  save(); closeSheet(); App.tab="la"; render(); toast("LA-Einheit gespeichert ⚡");
+  save(); closeSheet(); App.tab="la"; render(); toast("LA-Einheit gespeichert");
 }
 
 /* SONSTIGE form */
@@ -1035,7 +1074,7 @@ function openOtherSheet(existing, prefillName){
     </div>
     <label class="f">Notiz</label><textarea id="o-note" placeholder="…">${esc(r.note||"")}</textarea>
     <div style="display:flex; gap:9px; margin-top:16px">
-      ${existing?`<button class="btn danger" data-act="del-other:${existing.id}" style="flex:0 0 auto">🗑</button>`:""}
+      ${existing?`<button class="btn danger" data-act="del-other:${existing.id}" style="flex:0 0 auto">${icon('trash')}</button>`:""}
       <button class="btn" data-act="save-other" data-id="${existing?existing.id:""}">Speichern</button>
     </div>
   `);
@@ -1069,7 +1108,7 @@ function saveWeight(id){
 /* ZYKLUS — Periodenstart loggen */
 function openCycleSheet(){
   openSheet(`
-    <h3>🩸 Periode eintragen</h3>
+    <h3>Periode eintragen</h3>
     <div class="hint" style="margin-top:0">Markiere den <b>ersten Tag</b> deiner Periode. Daraus berechnet GoMausi Zyklusphase, Ø-Länge & Vorhersage.</div>
     <label class="f">Erster Tag</label><input id="c-date" type="date" value="${todayISO()}">
     <label class="f">Stärke (optional)</label>
@@ -1082,7 +1121,7 @@ function saveCycle(){
   const date=$("#c-date").value||todayISO();
   DB.cycle.entries=DB.cycle.entries.filter(e=>!(e.start&&e.date===date));
   DB.cycle.entries.push({ id:uid(), date, start:true, flow:$("#c-flow").value||"", note:$("#c-note").value.trim() });
-  save(); closeSheet(); App.tab="body"; render(); toast("Periode geloggt 🩸");
+  save(); closeSheet(); App.tab="body"; render(); toast("Periode geloggt");
 }
 
 /* JSON-IMPORT (Apple-Kurzbefehl / Health) */
@@ -1165,7 +1204,7 @@ function loadDemo(){
   DB.runs=runs; DB.gym=gym; DB.la=la; DB.other=other; DB.weight=weight; DB.cycle=cyc;
   DB.settings.zone2Target=145; DB.settings.onboarded=true; DB.settings.athlete="Mausi"; DB.settings.cycleOn=true;
   DB.settings.weeklyUnits=[{id:uid(),name:"Padel",target:1},{id:uid(),name:"Mobility",target:2}];
-  save(); App.tab="dash"; render(); toast("Demo-Daten geladen ✨");
+  save(); App.tab="dash"; render(); toast("Demo-Daten geladen");
 }
 function resetAll(){
   if(!confirm("Wirklich ALLE GoMausi-Daten löschen? (Backups bleiben erhalten)")) return;
@@ -1277,7 +1316,7 @@ function pendRow(p){ const sec=p.moving_time||0;
         <option value="la" ${p.bucket==="la"?"selected":""}>→ LA</option>
       </select>
       <button class="btn sec btn-sm" data-act="strava-import:${p.id}">Import</button>
-      <button class="iconbtn" data-act="strava-ignore:${p.id}" title="ignorieren">✕</button>
+      <button class="iconbtn" data-act="strava-ignore:${p.id}" title="ignorieren">${icon('x')}</button>
     </div></div></div>`;
 }
 
@@ -1377,7 +1416,7 @@ document.addEventListener("click", e=>{
       const h=exerciseHistory(nm); if(!h.length){ toast("Keine früheren Sätze"); break; }
       // letzte Session mit dieser Übung
       let last=null; [...DB.gym].sort((a,b)=>a.date<b.date?1:-1).some(s=>{const ex=(s.exercises||[]).find(e=>(e.name||"").trim().toLowerCase()===nm.toLowerCase()); if(ex){last=ex;return true;} return false;});
-      if(last){ gx[i].sets=last.sets.map(s=>({kg:s.kg,reps:s.reps})); renderGx(); toast("Letzte Werte übernommen ↺"); } break; }
+      if(last){ gx[i].sets=last.sets.map(s=>({kg:s.kg,reps:s.reps})); renderGx(); toast("Letzte Werte übernommen"); } break; }
     case "la-focus": { const f=decodeURIComponent(arg); laF.has(f)?laF.delete(f):laF.add(f);
       const chip=a.el; chip.classList.toggle("on"); break; }
     case "la-add-res": collectLR(); laR.push({label:"",sec:""}); renderLR(); break;
