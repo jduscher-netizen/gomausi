@@ -1,0 +1,18 @@
+{
+  "name": "GoMausi",
+  "short_name": "GoMausi",
+  "description": "Trainings-Tracker mit Fokus auf Fortschritt — Leichtathletik, Kraft & Zone-2-Lauf-Effizienz",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff5f9",
+  "theme_color": "#ff4f93",
+  "lang": "de",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" },
+    { "src": "icon.svg", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

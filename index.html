@@ -1,0 +1,1174 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>GoMausi</title>
+<meta name="theme-color" content="#ff4f93" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16121a" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="GoMausi">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{
+  --bg:#fff5f9; --bg2:#ffffff; --card:#ffffff; --ink:#241b24; --mut:#8c8090;
+  --line:#f0e1ea; --accent:#ff4f93; --accent2:#7c5cff; --accent-soft:#ffe6f0;
+  --good:#13b07d; --good-soft:#d6f4ea; --warn:#f5a623; --bad:#ef4d5a; --blue:#3b82f6;
+  --shadow:0 6px 22px rgba(190,60,120,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#16121a; --bg2:#1d1722; --card:#221a28; --ink:#f4eef6; --mut:#9c8fa6;
+    --line:#352b3d; --accent:#ff62a3; --accent2:#9b82ff; --accent-soft:#3a2030;
+    --good:#33d39e; --good-soft:#13322a; --warn:#f5b942; --bad:#ff6b76; --blue:#5b96ff;
+    --shadow:0 6px 22px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  background:var(--bg); color:var(--ink); line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(72px + env(safe-area-inset-bottom));
+}
+.topbar{
+  position:sticky; top:0; z-index:20; background:var(--bg);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex; align-items:center; gap:9px; font-weight:800; font-size:19px; letter-spacing:-.02em}
+.brand img{width:30px; height:30px; border-radius:9px; display:block}
+.flame{font-size:13px; font-weight:700; color:var(--accent); background:var(--accent-soft);
+  padding:5px 10px; border-radius:999px; display:flex; align-items:center; gap:4px}
+#view{padding:16px; max-width:680px; margin:0 auto}
+h2.sec{font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--mut); margin:22px 2px 10px; font-weight:700}
+.card{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px; box-shadow:var(--shadow); margin-bottom:12px}
+.card.tight{padding:13px}
+.muted{color:var(--mut)}
+.small{font-size:12.5px}
+.row{display:flex; gap:10px}
+.row.wrap{flex-wrap:wrap}
+.grow{flex:1}
+.center{text-align:center}
+.between{display:flex; align-items:center; justify-content:space-between; gap:8px}
+
+/* Hero efficiency */
+.hero{background:linear-gradient(135deg,var(--accent),#ff7a59); color:#fff; border:none}
+.hero .lab{font-size:12px; opacity:.92; text-transform:uppercase; letter-spacing:.06em; font-weight:700}
+.hero .big{font-size:46px; font-weight:850; letter-spacing:-.03em; line-height:1.05; margin:4px 0 2px}
+.hero .big small{font-size:18px; font-weight:700; opacity:.9}
+.hero .delta{display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:14px;
+  background:rgba(255,255,255,.2); padding:5px 11px; border-radius:999px; margin-top:8px}
+.hero .sub{font-size:12.5px; opacity:.9; margin-top:9px}
+
+/* rings */
+.rings{display:flex; gap:6px; justify-content:space-around; text-align:center}
+.ring{display:flex; flex-direction:column; align-items:center; gap:6px; flex:1}
+.ring-lab{font-size:11.5px; font-weight:600; color:var(--mut)}
+
+/* stat chips */
+.stats{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+.stat{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 10px; text-align:center}
+.stat .v{font-size:21px; font-weight:800; letter-spacing:-.02em}
+.stat .k{font-size:11px; color:var(--mut); margin-top:2px}
+
+/* quick add */
+.qa{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:4px}
+.qa button{display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 6px;
+  border:1px solid var(--line); background:var(--card); border-radius:16px; cursor:pointer;
+  font-weight:700; font-size:13px; color:var(--ink); box-shadow:var(--shadow)}
+.qa button .e{font-size:24px}
+.qa button:active{transform:scale(.97)}
+
+button.btn{border:none; background:var(--accent); color:#fff; font-weight:700; font-size:15px;
+  padding:13px 16px; border-radius:14px; cursor:pointer; width:100%}
+button.btn:active{transform:scale(.99)}
+button.btn.sec{background:var(--accent-soft); color:var(--accent)}
+button.btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--line)}
+button.btn.danger{background:transparent; color:var(--bad); border:1px solid var(--line)}
+button.btn-sm{font-size:13px; padding:9px 13px; width:auto; border-radius:11px}
+
+.banner{background:var(--accent-soft); border:1px solid var(--accent); color:var(--ink);
+  border-radius:16px; padding:14px; display:flex; gap:12px; align-items:center; cursor:pointer; margin-bottom:14px}
+.banner .e{font-size:26px}
+
+/* lists */
+.item{display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:none}
+.item .ic{width:38px; height:38px; border-radius:11px; background:var(--accent-soft); color:var(--accent);
+  display:flex; align-items:center; justify-content:center; font-size:18px; flex:0 0 auto}
+.item .t{font-weight:700; font-size:14.5px}
+.item .s{font-size:12.5px; color:var(--mut)}
+.tag{display:inline-block; font-size:11px; font-weight:700; padding:3px 8px; border-radius:999px;
+  background:var(--accent-soft); color:var(--accent); margin:2px 4px 2px 0}
+.tag.g{background:var(--good-soft); color:var(--good)}
+.iconbtn{background:none; border:none; color:var(--mut); font-size:17px; cursor:pointer; padding:6px}
+
+/* forms */
+label.f{display:block; font-size:12.5px; font-weight:700; color:var(--mut); margin:12px 2px 5px}
+input,select,textarea{font-family:inherit; font-size:16px; color:var(--ink); background:var(--bg2);
+  border:1px solid var(--line); border-radius:12px; padding:12px; width:100%; outline:none}
+input:focus,select,textarea:focus{border-color:var(--accent)}
+textarea{min-height:60px; resize:vertical}
+.field{display:flex; flex-direction:column}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{padding:9px 13px; border-radius:999px; border:1.5px solid var(--line); background:var(--bg2);
+  font-size:13.5px; font-weight:600; cursor:pointer; color:var(--ink)}
+.chip.on{background:var(--accent); border-color:var(--accent); color:#fff}
+
+/* sheet */
+.overlay{position:fixed; inset:0; background:rgba(20,8,16,.4); opacity:0; pointer-events:none;
+  transition:opacity .22s; z-index:40}
+.overlay.show{opacity:1; pointer-events:auto}
+.sheet{position:fixed; left:0; right:0; bottom:0; z-index:50; background:var(--bg2);
+  border-radius:22px 22px 0 0; box-shadow:0 -8px 40px rgba(0,0,0,.25);
+  transform:translateY(110%); transition:transform .26s cubic-bezier(.22,1,.36,1);
+  max-height:92vh; overflow-y:auto; padding:8px 18px calc(20px + env(safe-area-inset-bottom));
+  max-width:680px; margin:0 auto}
+.sheet.open{transform:translateY(0)}
+.sheet .grip{width:40px; height:5px; border-radius:3px; background:var(--line); margin:8px auto 4px}
+.sheet h3{margin:6px 2px 2px; font-size:19px; letter-spacing:-.02em}
+
+/* tabbar */
+.tabbar{position:fixed; left:0; right:0; bottom:0; z-index:30; background:var(--bg2);
+  border-top:1px solid var(--line); display:flex; justify-content:space-around;
+  padding:7px 4px calc(7px + env(safe-area-inset-bottom)); max-width:680px; margin:0 auto}
+.tabbar button{background:none; border:none; cursor:pointer; flex:1; display:flex; flex-direction:column;
+  align-items:center; gap:3px; color:var(--mut); font-size:10.5px; font-weight:600; padding:4px 0}
+.tabbar button .e{font-size:21px; line-height:1}
+.tabbar button.on{color:var(--accent)}
+
+/* toast */
+.toast{position:fixed; left:50%; bottom:calc(86px + env(safe-area-inset-bottom)); transform:translate(-50%,20px);
+  background:var(--ink); color:var(--bg2); padding:11px 18px; border-radius:999px; font-size:13.5px; font-weight:600;
+  opacity:0; pointer-events:none; transition:all .25s; z-index:60; max-width:88%; text-align:center; box-shadow:var(--shadow)}
+.toast.show{opacity:1; transform:translate(-50%,0)}
+
+.empty{text-align:center; color:var(--mut); padding:26px 10px; font-size:14px}
+.empty .e{font-size:34px; display:block; margin-bottom:8px}
+svg.chart{width:100%; height:auto; display:block; overflow:visible}
+.legend{display:flex; gap:14px; justify-content:center; font-size:11.5px; color:var(--mut); margin-top:6px}
+.legend i{display:inline-block; width:11px; height:3px; border-radius:2px; vertical-align:middle; margin-right:5px}
+.seg{display:flex; gap:0; border:1px solid var(--line); border-radius:11px; overflow:hidden; margin-bottom:12px}
+.seg button{flex:1; background:var(--bg2); border:none; padding:9px; font-weight:700; font-size:13px; color:var(--mut); cursor:pointer}
+.seg button.on{background:var(--accent); color:#fff}
+.kv{display:flex; justify-content:space-between; font-size:13.5px; padding:7px 0; border-bottom:1px solid var(--line)}
+.kv:last-child{border:none}
+.kv b{font-weight:700}
+.pr{color:var(--good); font-weight:700}
+.setrow{display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-bottom:7px; align-items:center}
+.exblock{border:1px solid var(--line); border-radius:14px; padding:12px; margin-bottom:10px; background:var(--card)}
+.hint{font-size:11.5px; color:var(--mut); margin-top:5px}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><img src="icon.svg" alt=""><span>GoMausi</span></div>
+  <div class="flame" id="flame">🔥 0 Wo.</div>
+</header>
+<main id="view"></main>
+
+<nav class="tabbar" id="tabbar">
+  <button data-act="tab:dash" class="on"><span class="e">🏠</span>Start</button>
+  <button data-act="tab:run"><span class="e">🏃‍♀️</span>Lauf</button>
+  <button data-act="tab:gym"><span class="e">🏋️‍♀️</span>Kraft</button>
+  <button data-act="tab:la"><span class="e">⚡</span>Leichtathletik</button>
+  <button data-act="tab:more"><span class="e">⚙️</span>Mehr</button>
+</nav>
+
+<div class="overlay" id="overlay" data-act="sheet-close"></div>
+<section class="sheet" id="sheet"></section>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============ STORAGE ============ */
+const LS="gomausi_v1", BK_PREFIX="gomausi_v1_bk_", BK_MAX=12;
+function listBackups(){ const k=[]; for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i); if(key&&key.startsWith(BK_PREFIX))k.push(key);} return k.sort(); }
+function freshDB(){
+  return {
+    v:1, created:Date.now(), lastModified:Date.now(),
+    settings:{
+      athlete:"", zone2Target:150, hrMax:null, age:null,
+      targets:{la:2, gym:3, run:2}, streakMin:3,
+      laFocuses:["Sprint","Start/Beschleunigung","Technik","Hürden","Tempolauf","Kraftausdauer","Sprung","Regeneration"],
+      sprintPresets:["30m","60m","100m","150m","200m"],
+      onboarded:false
+    },
+    runs:[], gym:[], la:[]
+  };
+}
+function migrateDB(d){
+  const f=freshDB();
+  d.settings=Object.assign({}, f.settings, d.settings||{});
+  d.settings.targets=Object.assign({}, f.settings.targets, (d.settings&&d.settings.targets)||{});
+  d.runs=d.runs||[]; d.gym=d.gym||[]; d.la=d.la||[];
+  if(!d.v) d.v=1;
+  return d;
+}
+function hasContent(db){ return !!(db && ((db.runs&&db.runs.length)||(db.gym&&db.gym.length)||(db.la&&db.la.length))); }
+function recoverFromBackup(){
+  const ks=listBackups();
+  for(let i=ks.length-1;i>=0;i--){ try{ const d=JSON.parse(localStorage.getItem(ks[i])); if(hasContent(d)) return d; }catch(e){} }
+  return null;
+}
+function load(){
+  try{ const raw=localStorage.getItem(LS); if(raw){ const d=JSON.parse(raw); if(d&&typeof d==="object") return migrateDB(d); } }
+  catch(e){ console.error("load failed",e); }
+  const rec=recoverFromBackup();
+  if(rec){ setTimeout(()=>toast("Daten aus Backup wiederhergestellt"),300); return migrateDB(rec); }
+  return freshDB();
+}
+let DB=load(); let _lastBk=0;
+function save(){
+  DB.lastModified=Date.now(); const now=Date.now();
+  if(now-_lastBk>5*60*1000){ const prev=localStorage.getItem(LS);
+    if(prev){ try{ localStorage.setItem(BK_PREFIX+now, prev); const ks=listBackups(); while(ks.length>BK_MAX) localStorage.removeItem(ks.shift()); _lastBk=now; }catch(e){} } }
+  try{ localStorage.setItem(LS, JSON.stringify(DB)); }catch(e){ toast("Speichern fehlgeschlagen"); }
+}
+
+/* ============ HELPERS ============ */
+const $=(s,r=document)=>r.querySelector(s);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const num=v=>{ const n=parseFloat(String(v==null?"":v).replace(",",".")); return isNaN(n)?null:n; };
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2400); }
+function parseD(s){ const [y,m,d]=String(s).split("-").map(Number); return new Date(y,(m||1)-1,d||1); }
+function isoD(dt){ return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`; }
+function todayISO(){ return isoD(new Date()); }
+function mondayOf(dt){ const x=new Date(dt.getFullYear(),dt.getMonth(),dt.getDate()); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); return x; }
+function weekKey(s){ return isoD(mondayOf(parseD(s))); }
+function fmtDateShort(s){ const d=parseD(s); return `${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}.`; }
+const WD=["So","Mo","Di","Mi","Do","Fr","Sa"];
+function fmtDateLong(s){ const d=parseD(s); return `${WD[d.getDay()]} ${fmtDateShort(s)}`; }
+function fmtPace(secPerKm){ if(secPerKm==null||!isFinite(secPerKm))return "–"; const m=Math.floor(secPerKm/60), s=Math.round(secPerKm%60); return `${m}:${String(s).padStart(2,"0")}`; }
+function fmtDur(sec){ if(sec==null)return "–"; const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=Math.round(sec%60);
+  return h? `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}` : `${m}:${String(s).padStart(2,"0")}`; }
+function relWeeks(n){ return n===0?"diese Woche":n===1?"letzte Woche":`vor ${n} Wochen`; }
+
+/* ============ DOMAIN CALC ============ */
+function runPace(r){ return (r.distKm>0)? r.durSec/r.distKm : null; }           // sec/km
+function runEF(r){ if(!(r.distKm>0&&r.durSec>0&&r.avgHr>0))return null; const mpm=(r.distKm*1000)/(r.durSec/60); return mpm/r.avgHr; } // m/min per bpm
+function paceAtTarget(r,t){ const p=runPace(r); if(p==null||!r.avgHr||!t)return null; return p*(r.avgHr/t); } // normalisierte sec/km @ Ziel-Puls
+function linreg(ys){ const n=ys.length; if(n<2)return null; let sx=0,sy=0,sxy=0,sxx=0; ys.forEach((y,i)=>{sx+=i;sy+=y;sxy+=i*y;sxx+=i*i;});
+  const d=n*sxx-sx*sx; if(!d)return null; const m=(n*sxy-sx*sy)/d; return {m, b:(sy-m*sx)/n}; }
+function weeklyAgg(records, valFn){
+  const m=new Map();
+  records.forEach(r=>{ const v=valFn(r); if(v==null||isNaN(v))return; const k=weekKey(r.date); (m.get(k)||m.set(k,[]).get(k)).push(v); });
+  return [...m.keys()].sort().map(k=>{ const a=m.get(k); return {key:k, avg:a.reduce((x,y)=>x+y,0)/a.length, n:a.length}; });
+}
+function weekCounts(){ const m={}; const add=a=>a.forEach(r=>{const k=weekKey(r.date); m[k]=(m[k]||0)+1;}); add(DB.runs);add(DB.gym);add(DB.la); return m; }
+function currentStreak(){
+  const m=weekCounts(), min=DB.settings.streakMin||3; let cur=mondayOf(new Date()), streak=0, first=true, guard=0;
+  while(guard++<520){ const c=m[isoD(cur)]||0;
+    if(c>=min) streak++; else if(!first) break;  // laufende Woche bricht Streak nicht
+    first=false; cur.setDate(cur.getDate()-7);
+  }
+  return streak;
+}
+function thisWeekCounts(){ const wk=isoD(mondayOf(new Date()));
+  const c=t=>t.filter(r=>weekKey(r.date)===wk).length; return {run:c(DB.runs), gym:c(DB.gym), la:c(DB.la)}; }
+function effSummary(){
+  const runs=DB.runs.filter(r=>r.distKm>0&&r.durSec>0&&r.avgHr>0).sort((a,b)=>a.date<b.date?-1:1);
+  if(!runs.length) return null;
+  const t=DB.settings.zone2Target;
+  const now=new Date(), d28=new Date(now), d56=new Date(now); d28.setDate(now.getDate()-28); d56.setDate(now.getDate()-56);
+  const pat=r=>paceAtTarget(r,t);
+  const recent=runs.filter(r=>parseD(r.date)>d28), prev=runs.filter(r=>parseD(r.date)>d56&&parseD(r.date)<=d28);
+  const avg=a=>a.length? a.reduce((s,x)=>s+x,0)/a.length : null;
+  const rPat=avg(recent.map(pat)), pPat=avg(prev.map(pat));
+  const latest=runs[runs.length-1];
+  return { t, latest, latestPat:pat(latest), rPat, pPat, recentN:recent.length,
+    deltaPct:(rPat&&pPat)? (pPat-rPat)/pPat*100 : null,
+    bestEf:Math.max(...runs.map(runEF)), bestPat:Math.min(...runs.map(pat)) };
+}
+/* --- bereichsübergreifend: Trainingslast & Fortschritt --- */
+function allWorkouts(){
+  return [
+    ...DB.runs.map(r=>({date:r.date, sec:r.durSec||null, hr:r.avgHr||null, a:"run"})),
+    ...DB.gym.map(r=>({date:r.date, sec:r.durSec||null, hr:r.avgHr||null, a:"gym"})),
+    ...DB.la.map(r=>({date:r.date, sec:r.durMin?Math.round(r.durMin*60):null, hr:r.avgHr||null, a:"la"})),
+  ];
+}
+function fmtH(sec){ if(!sec) return "–"; return sec>=3600 ? (sec/3600).toFixed(1).replace(".",",")+" h" : Math.round(sec/60)+" min"; }
+function fmtAgo(ts){ if(!ts) return "–"; const m=Math.round((Date.now()-ts)/60000); if(m<1)return "gerade eben"; if(m<60)return m+" min"; const h=Math.round(m/60); if(h<24)return "vor "+h+" h"; return "vor "+Math.round(h/24)+" d"; }
+function thisWeekLoad(){
+  const wk=isoD(mondayOf(new Date())); const w=allWorkouts().filter(x=>weekKey(x.date)===wk);
+  const hrs=w.filter(x=>x.hr).map(x=>x.hr);
+  return { sec:w.reduce((a,x)=>a+(x.sec||0),0), avgHr:hrs.length?Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length):null, sessions:w.length };
+}
+function weeklyLoadSeries(n){ n=n||10; const all=allWorkouts(); const start=mondayOf(new Date()); const labels=[],mins=[];
+  for(let i=n-1;i>=0;i--){ const d=new Date(start); d.setDate(d.getDate()-i*7); const k=isoD(d);
+    labels.push(fmtDateShort(k)); mins.push(Math.round(all.filter(x=>weekKey(x.date)===k).reduce((a,x)=>a+(x.sec||0),0)/60)); }
+  return {labels, mins};
+}
+function windowAvg(records, valFn, days){ days=days||28; const now=new Date(), a=new Date(now), b=new Date(now);
+  a.setDate(now.getDate()-days); b.setDate(now.getDate()-2*days); const rec=[], prev=[];
+  records.forEach(r=>{ const v=valFn(r); if(v==null||isNaN(v))return; const d=parseD(r.date); if(d>a)rec.push(v); else if(d>b)prev.push(v); });
+  const avg=z=>z.length?z.reduce((s,x)=>s+x,0)/z.length:null; const rA=avg(rec), pA=avg(prev);
+  return { recent:rA, prev:pA, pct:(rA!=null&&pA!=null&&pA!==0)?(rA-pA)/pA*100:null, n:rec.length };
+}
+function areaCardHTML(tab,emoji,title,color,metric,badge){
+  return `<div class="card areacard" data-act="tab:${tab}" style="cursor:pointer; border-left:4px solid ${color}">
+    <div class="between"><div class="small muted" style="font-weight:700">${emoji} ${title}</div>${badge||""}</div>
+    <div style="font-size:21px; font-weight:800; margin-top:5px">${metric}</div></div>`;
+}
+function areaCards(){
+  let out="";
+  // Lauf — Zone-2-Effizienz
+  { const eff=effSummary(); let metric, badge="";
+    if(eff){ metric=`${fmtPace(eff.rPat||eff.latestPat)} <span class="small muted">min/km @${eff.t}</span>`;
+      if(eff.deltaPct!=null){ const g=eff.deltaPct>0; badge=`<span class="tag ${g?'g':''}">${g?'▼':'▲'} ${Math.abs(eff.deltaPct).toFixed(0)}% vs 4 Wo.</span>`; }
+    } else metric=`<span class="muted" style="font-size:15px">noch keine Läufe</span>`;
+    out+=areaCardHTML("run","🏃‍♀️","Lauf · Effizienz","var(--accent)",metric,badge);
+  }
+  // Kraft — Volumen-Trend
+  { const wv=windowAvg(DB.gym, gymVolume); let metric, badge="";
+    if(DB.gym.some(s=>gymVolume(s)>0)){ metric=`${Math.round(wv.recent||0)} <span class="small muted">kg Ø-Volumen</span>`;
+      if(wv.pct!=null){ const g=wv.pct>0; badge=`<span class="tag ${g?'g':''}">${g?'▲':'▼'} ${Math.abs(wv.pct).toFixed(0)}% vs 4 Wo.</span>`; }
+    } else metric=`<span class="muted" style="font-size:15px">${DB.gym.length?"HF/Zeit erfasst · Übungen ergänzen":"noch keine Einheiten"}</span>`;
+    out+=areaCardHTML("gym","🏋️‍♀️","Kraft","var(--accent2)",metric,badge);
+  }
+  // LA — beste Sprintzeit (Top-Distanz)
+  { let metric, badge=""; const dc={}; DB.la.forEach(s=>(s.results||[]).forEach(r=>{ if(r.label) dc[r.label]=(dc[r.label]||0)+1; }));
+    const top=Object.keys(dc).sort((a,b)=>dc[b]-dc[a])[0];
+    if(top){ const wv=windowAvg(DB.la, s=>{ const rs=(s.results||[]).filter(r=>r.label===top&&num(r.sec)!=null); return rs.length?Math.min(...rs.map(r=>num(r.sec))):null; });
+      metric=`${esc(top)}: <b>${wv.recent?wv.recent.toFixed(2):'–'}s</b>`;
+      if(wv.pct!=null){ const g=wv.pct<0; badge=`<span class="tag ${g?'g':''}">${g?'▼':'▲'} ${Math.abs(wv.pct).toFixed(1)}% ${g?'schneller':'langs.'}</span>`; }
+    } else if(DB.la.length){ metric=`${DB.la.length} <span class="small muted">Einheiten</span>`; }
+    else metric=`<span class="muted" style="font-size:15px">noch keine Einheiten</span>`;
+    out+=areaCardHTML("la","⚡","Leichtathletik","var(--warn)",metric,badge);
+  }
+  return out;
+}
+
+/* ============ CHARTS (inline SVG) ============ */
+function emptyChart(msg){ return `<div class="empty"><span class="e">📈</span>${msg||"Noch keine Daten – trag deine erste Einheit ein."}</div>`; }
+function lineChart(o){
+  const W=340, H=o.h||175, padL=40, padR=14, padT=14, padB=26;
+  const rows=o.rows||[], labels=o.xLabels||[];
+  const all=rows.flatMap(r=>r.ys).filter(v=>v!=null&&!isNaN(v));
+  if(all.length<1) return emptyChart(o.empty);
+  let mn=Math.min(...all), mx=Math.max(...all); if(mn===mx){mn-=1;mx+=1;}
+  const sp=mx-mn; mn-=sp*0.14; mx+=sp*0.14;
+  const n=Math.max(labels.length, ...rows.map(r=>r.ys.length));
+  const xAt=i=> padL+(n<=1?(W-padL-padR)/2:(i/(n-1))*(W-padL-padR));
+  const yAt=v=> padT+(1-(v-mn)/(mx-mn))*(H-padT-padB);
+  let g="";
+  for(let i=0;i<=3;i++){ const v=mn+(mx-mn)*i/3, y=yAt(v);
+    g+=`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`;
+    g+=`<text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--mut)">${o.yFmt?o.yFmt(v):Math.round(v)}</text>`;
+  }
+  let xl="";
+  const step=Math.ceil(n/4);
+  labels.forEach((lb,i)=>{ if(i%step===0||i===n-1){ xl+=`<text x="${xAt(i).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="9" fill="var(--mut)">${esc(lb)}</text>`; } });
+  let series="";
+  rows.forEach(r=>{
+    const pts=r.ys.map((v,i)=>v==null||isNaN(v)?null:[xAt(i),yAt(v)]).filter(Boolean);
+    if(pts.length>1) series+=`<polyline points="${pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ")}" fill="none" stroke="${r.color}" stroke-width="${r.width||2.5}" stroke-linecap="round" stroke-linejoin="round" ${r.dash?'stroke-dasharray="4 4"':''}/>`;
+    if(r.dot!==false) pts.forEach(p=>{ series+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${r.dotR||3}" fill="${r.color}"/>`; });
+  });
+  let trend="";
+  if(o.trend && rows[0]){ const ys=rows[0].ys.map(v=>v==null||isNaN(v)?null:v);
+    const idx=ys.map((v,i)=>v==null?null:i).filter(v=>v!=null);
+    const reg=linreg(idx.map(i=>ys[i]));
+    if(reg && idx.length>1){ const x0=idx[0],x1=idx[idx.length-1];
+      const y0=reg.b, y1=reg.b+reg.m*(idx.length-1);
+      // map regression (over compacted index) back: approximate using endpoints
+      trend=`<line x1="${xAt(x0).toFixed(1)}" y1="${yAt(ys[x0]).toFixed(1)}" x2="${xAt(x1).toFixed(1)}" y2="${yAt(ys[x1]).toFixed(1)}" stroke="${o.trendColor||'var(--good)'}" stroke-width="2" stroke-dasharray="5 4" opacity="0.8"/>`;
+    }
+  }
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${g}${trend}${series}${xl}</svg>`;
+}
+function barChart(o){
+  const W=340, H=o.h||150, padL=30, padR=10, padT=12, padB=24;
+  const vals=o.values||[], labels=o.labels||[];
+  if(!vals.length||Math.max(...vals)===0) return emptyChart(o.empty);
+  const mx=Math.max(...vals, o.target||0, 1);
+  const n=vals.length, bw=(W-padL-padR)/n*0.62, gap=(W-padL-padR)/n;
+  const yAt=v=> padT+(1-v/mx)*(H-padT-padB);
+  let bars="", xl="";
+  vals.forEach((v,i)=>{ const x=padL+gap*i+(gap-bw)/2, y=yAt(v), h=H-padB-y;
+    bars+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0,h).toFixed(1)}" rx="3" fill="${o.color||'var(--accent)'}"/>`;
+    if(v>0) bars+=`<text x="${(x+bw/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="var(--ink)">${o.valFmt?o.valFmt(v):v}</text>`;
+    xl+=`<text x="${(x+bw/2).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="8.5" fill="var(--mut)">${esc(labels[i]||"")}</text>`;
+  });
+  let tline="";
+  if(o.target){ const y=yAt(o.target); tline=`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="var(--good)" stroke-width="1.5" stroke-dasharray="4 3"/>`; }
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${tline}${bars}${xl}</svg>`;
+}
+function ring(value,goal,label,emoji,color){
+  const pct=goal>0?Math.min(1,value/goal):0, r=26, c=2*Math.PI*r, off=c*(1-pct);
+  const col=value>=goal? "var(--good)" : color;
+  return `<div class="ring"><svg viewBox="0 0 64 64" width="62" height="62">
+    <circle cx="32" cy="32" r="${r}" fill="none" stroke="var(--line)" stroke-width="7"/>
+    <circle cx="32" cy="32" r="${r}" fill="none" stroke="${col}" stroke-width="7" stroke-linecap="round"
+      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 32 32)"/>
+    <text x="32" y="31" text-anchor="middle" font-size="16" font-weight="800" fill="var(--ink)">${value}</text>
+    <text x="32" y="45" text-anchor="middle" font-size="9" fill="var(--mut)">/ ${goal}</text>
+  </svg><div class="ring-lab">${emoji} ${label}</div></div>`;
+}
+
+/* ============ VIEWS ============ */
+const App={tab:"dash", effMode:"pat", exSel:null, distSel:null};
+function render(){
+  document.querySelectorAll("#tabbar button").forEach(b=>b.classList.toggle("on", b.dataset.act===("tab:"+App.tab)));
+  const st=currentStreak(); $("#flame").innerHTML=`🔥 ${st} Wo.`;
+  const v=$("#view");
+  if(App.tab==="dash") v.innerHTML=viewDash();
+  else if(App.tab==="run"){ v.innerHTML=viewRun(); mountRun(); }
+  else if(App.tab==="gym"){ v.innerHTML=viewGym(); mountGym(); }
+  else if(App.tab==="la"){ v.innerHTML=viewLA(); mountLA(); }
+  else if(App.tab==="more"){ v.innerHTML=viewMore(); mountMore(); }
+  window.scrollTo(0,0);
+}
+
+function viewDash(){
+  const s=DB.settings, tw=thisWeekCounts(), load=thisWeekLoad(), streak=currentStreak();
+  let html="";
+  const pend=stravaPendingCount();
+  if(pend>0){
+    html+=`<div class="banner" data-act="tab:more"><span class="e">🟧</span><div>
+      <div style="font-weight:800">${pend} neue Aktivität${pend===1?"":"en"} bereit</div>
+      <div class="small muted">In „Mehr" Bereich wählen & importieren →</div></div></div>`;
+  } else if(!s.onboarded){
+    html+=`<div class="banner" data-act="onboard"><span class="e">👋</span><div>
+      <div style="font-weight:800">Willkommen, ${s.athlete?esc(s.athlete):"Mausi"}! 🐭</div>
+      <div class="small muted">Kurz einrichten: <b>Zone-2-Ziel-Puls</b> + optional <b>Strava verbinden</b> (Apple-Watch-Workouts automatisch). Tippen →</div></div></div>`;
+  }
+  // Diese Woche — alle drei Sparten gleichwertig
+  html+=`<h2 class="sec">Diese Woche</h2><div class="card"><div class="rings">
+    ${ring(tw.run,s.targets.run,"Lauf","🏃‍♀️","var(--accent)")}
+    ${ring(tw.gym,s.targets.gym,"Kraft","🏋️‍♀️","var(--accent2)")}
+    ${ring(tw.la,s.targets.la,"LA","⚡","var(--warn)")}
+  </div>
+  <div class="between" style="margin-top:12px; padding-top:11px; border-top:1px solid var(--line)">
+    <span class="small"><b>🔥 ${streak}</b> <span class="muted">Streak</span></span>
+    <span class="small"><b>${fmtH(load.sec)}</b> <span class="muted">Zeit</span></span>
+    <span class="small"><b>${load.avgHr||"–"}</b> <span class="muted">Ø-Puls</span></span>
+    <span class="small"><b>${load.sessions}</b> <span class="muted">Einheiten</span></span>
+  </div></div>`;
+  // Fortschritt je Bereich (gleichwertig)
+  html+=`<h2 class="sec">Fortschritt je Bereich</h2>${areaCards()}`;
+  // Trainingslast über Zeit
+  const wl=weeklyLoadSeries(10);
+  html+=`<h2 class="sec">Trainingszeit / Woche</h2><div class="card tight">
+    ${barChart({labels:wl.labels, values:wl.mins, color:"var(--accent)", h:140, empty:"Noch keine Einheiten."})}
+    <div class="hint center">Minuten pro Woche · alle Sparten zusammen</div></div>`;
+  // quick add
+  html+=`<h2 class="sec">Schnell eintragen</h2><div class="qa">
+    <button data-act="add-run"><span class="e">🏃‍♀️</span>Lauf</button>
+    <button data-act="add-gym"><span class="e">🏋️‍♀️</span>Kraft</button>
+    <button data-act="add-la"><span class="e">⚡</span>LA</button>
+  </div>`;
+  // recent
+  const recent=[...DB.runs.map(r=>({...r,_t:"run"})),...DB.gym.map(r=>({...r,_t:"gym"})),...DB.la.map(r=>({...r,_t:"la"}))]
+    .sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:0).slice(0,6);
+  if(recent.length){ html+=`<h2 class="sec">Zuletzt</h2><div class="card">`+recent.map(r=>itemRow(r)).join("")+`</div>`; }
+  return html;
+}
+function consistencyChart(){
+  const m=weekCounts(); const labels=[], values=[]; const start=mondayOf(new Date());
+  for(let i=9;i>=0;i--){ const d=new Date(start); d.setDate(d.getDate()-i*7); const k=isoD(d);
+    labels.push(fmtDateShort(k)); values.push(m[k]||0); }
+  return barChart({labels, values, color:"var(--accent2)", target:DB.settings.targets.run+DB.settings.targets.gym+DB.settings.targets.la, h:140, empty:"Noch keine Einheiten."});
+}
+function itemRow(r){
+  if(r._t==="run"){ const p=runPace(r);
+    return `<div class="item"><div class="ic">🏃‍♀️</div><div class="grow">
+      <div class="t">Zone-2-Lauf · ${r.distKm} km</div>
+      <div class="s">${fmtDateLong(r.date)} · ${fmtPace(p)}/km · ⌀ ${r.avgHr||"–"} bpm</div></div>
+      <button class="iconbtn" data-act="edit-run:${r.id}">✏️</button></div>`; }
+  if(r._t==="gym"){ const nex=(r.exercises||[]).length, vol=gymVolume(r);
+    const extra=`${vol>0?Math.round(vol)+" kg":"HF/Zeit"}${r.durSec?" · "+fmtH(r.durSec):""}${r.avgHr?" · ⌀"+r.avgHr+" bpm":""}`;
+    return `<div class="item"><div class="ic" style="background:var(--accent-soft);color:var(--accent2)">🏋️‍♀️</div><div class="grow">
+      <div class="t">Kraft${nex?" · "+nex+" Übung"+(nex===1?"":"en"):""}</div>
+      <div class="s">${fmtDateLong(r.date)} · ${extra}</div></div>
+      <button class="iconbtn" data-act="edit-gym:${r.id}">✏️</button></div>`; }
+  const foc=(r.focuses||[]).slice(0,2).join(", ")+((r.focuses||[]).length>2?"…":"");
+  return `<div class="item"><div class="ic" style="background:#fff3d6;color:var(--warn)">⚡</div><div class="grow">
+    <div class="t">LA · ${esc(foc||"Einheit")}</div>
+    <div class="s">${fmtDateLong(r.date)}${r.durMin?" · "+r.durMin+" min":""}${r.avgHr?" · ⌀"+r.avgHr+" bpm":""}${(r.results||[]).length?" · "+r.results.length+" Zeit(en)":""}</div></div>
+    <button class="iconbtn" data-act="edit-la:${r.id}">✏️</button></div>`;
+}
+
+/* ---- LAUF ---- */
+function viewRun(){
+  const runs=[...DB.runs].sort((a,b)=>a.date<b.date?-1:1);
+  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">🏃‍♀️ Zone-2-Lauf</h2>
+    <button class="btn btn-sm" data-act="add-run">+ Lauf</button></div>`;
+  if(!runs.length){ html+=`<div class="card">${emptyChart('Noch kein Lauf — tippe „+ Lauf" und lies Pace/Puls von der Uhr ab.')}</div>`; return html; }
+  const t=DB.settings.zone2Target, eff=effSummary();
+  // headline chart
+  const agg=weeklyAgg(runs, r=>App.effMode==="ef"?runEF(r):paceAtTarget(r,t));
+  const labels=agg.map(a=>fmtDateShort(a.key)), ys=agg.map(a=>a.avg);
+  const isEf=App.effMode==="ef";
+  html+=`<div class="card">
+    <div class="seg"><button data-act="eff:pat" class="${isEf?"":"on"}">Pace @ Puls ${t}</button><button data-act="eff:ef" class="${isEf?"on":""}">Effizienz-Faktor</button></div>
+    ${lineChart({rows:[{ys, color:"var(--accent)"}], xLabels:labels, trend:true,
+      trendColor: isEf?"var(--good)":"var(--good)",
+      yFmt: isEf? (v=>v.toFixed(2)) : (v=>fmtPace(v)),
+      empty:"Mind. 1 Lauf nötig."})}
+    <div class="hint center">${isEf? "Meter pro Minute je Herzschlag — <b>höher = besser</b> (Trendlinie ↗ = Fortschritt)." : `Auf Puls ${t} normalisierte Pace — <b>niedriger = besser</b> (Trendlinie ↘ = Fortschritt).`}</div>
+  </div>`;
+  // records
+  if(eff){ html+=`<div class="stats">
+    <div class="stat"><div class="v">${fmtPace(eff.bestPat)}</div><div class="k">Beste Pace @${t}</div></div>
+    <div class="stat"><div class="v">${eff.bestEf.toFixed(1)}</div><div class="k">Bester Eff.-Faktor</div></div>
+    <div class="stat"><div class="v">${runs.length}</div><div class="k">Läufe gesamt</div></div>
+  </div>`; }
+  // pace & HR dual
+  html+=`<h2 class="sec">Pace & Puls über Zeit</h2><div class="card">
+    ${(function(){
+      const aggPace=weeklyAgg(runs, r=>runPace(r));
+      const L=aggPace.map(a=>fmtDateShort(a.key));
+      return lineChart({rows:[{ys:aggPace.map(a=>a.avg), color:"var(--accent)"}], xLabels:L, yFmt:v=>fmtPace(v), empty:"–"});
+    })()}
+    <div class="legend"><span><i style="background:var(--accent)"></i>Ø-Pace (min/km)</span></div>
+    ${(function(){ const aggHr=weeklyAgg(runs,r=>r.avgHr||null); const L=aggHr.map(a=>fmtDateShort(a.key));
+      return `<div style="margin-top:6px">`+lineChart({rows:[{ys:aggHr.map(a=>a.avg), color:"var(--blue)"}], xLabels:L, yFmt:v=>Math.round(v), h:120, empty:"–"})+`</div>`; })()}
+    <div class="legend"><span><i style="background:var(--blue)"></i>Ø-Puls (bpm)</span> · Ziel ${t}</div>
+  </div>`;
+  // list
+  html+=`<h2 class="sec">Alle Läufe</h2><div class="card">`;
+  html+=[...runs].reverse().map(r=>{ const p=runPace(r), pat=paceAtTarget(r,t), inZone=r.avgHr&&r.avgHr<=t;
+    return `<div class="item"><div class="ic">🏃‍♀️</div><div class="grow">
+      <div class="t">${r.distKm} km · ${fmtPace(p)}/km</div>
+      <div class="s">${fmtDateLong(r.date)} · ⌀${r.avgHr||"–"}${r.maxHr?"/"+r.maxHr:""} bpm ${inZone?'<span class="tag g">in Zone</span>':r.avgHr?'<span class="tag">über Ziel</span>':''}</div>
+      <div class="s">Pace @${t}: <b>${fmtPace(pat)}</b> · EF ${runEF(r)?runEF(r).toFixed(1):"–"}${r.note?" · "+esc(r.note):""}</div></div>
+      <button class="iconbtn" data-act="edit-run:${r.id}">✏️</button></div>`; }).join("");
+  html+=`</div>`;
+  return html;
+}
+function mountRun(){}
+
+/* ---- KRAFT ---- */
+function gymVolume(s){ return (s.exercises||[]).reduce((v,e)=>v+(e.sets||[]).reduce((x,st)=>x+(num(st.kg)||0)*(num(st.reps)||0),0),0); }
+function exerciseNames(){ const set=new Set(); DB.gym.forEach(s=>(s.exercises||[]).forEach(e=>e.name&&set.add(e.name.trim()))); return [...set]; }
+function exerciseHistory(name){
+  const out=[];
+  DB.gym.forEach(s=>{ (s.exercises||[]).forEach(e=>{ if((e.name||"").trim().toLowerCase()===name.toLowerCase()){
+    const sets=(e.sets||[]).map(st=>({kg:num(st.kg)||0,reps:num(st.reps)||0})).filter(st=>st.kg>0&&st.reps>0);
+    if(!sets.length)return;
+    const top=Math.max(...sets.map(s=>s.kg));
+    const e1rm=Math.max(...sets.map(s=>s.kg*(1+s.reps/30)));
+    const vol=sets.reduce((x,s)=>x+s.kg*s.reps,0);
+    out.push({date:s.date, top, e1rm, vol});
+  }}); });
+  return out.sort((a,b)=>a.date<b.date?-1:1);
+}
+function viewGym(){
+  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">🏋️‍♀️ Kraft / Studio</h2>
+    <button class="btn btn-sm" data-act="add-gym">+ Einheit</button></div>`;
+  const names=exerciseNames();
+  if(!DB.gym.length){ html+=`<div class="card">${emptyChart("Noch keine Kraft-Einheit. Übung + Gewicht + Sätze eintragen – der Verlauf je Übung baut sich automatisch auf.")}</div>`; return html; }
+  if(names.length){
+    if(!App.exSel||!names.includes(App.exSel)) App.exSel=names[0];
+    const hist=exerciseHistory(App.exSel);
+    html+=`<div class="card">
+      <label class="f">Übung für Verlauf</label>
+      <select data-act="pick-exercise">${names.map(n=>`<option ${n===App.exSel?"selected":""}>${esc(n)}</option>`).join("")}</select>
+      <div style="margin-top:12px">${lineChart({rows:[{ys:hist.map(h=>h.top), color:"var(--accent2)"}], xLabels:hist.map(h=>fmtDateShort(h.date)), trend:true, yFmt:v=>Math.round(v)+"kg", empty:"Mind. 2 Einträge dieser Übung."})}</div>
+      <div class="hint center">Top-Satz Gewicht — <b>höher = stärker</b></div>`;
+    if(hist.length){ const best=hist.reduce((a,b)=>b.top>a.top?b:a), bestRm=hist.reduce((a,b)=>b.e1rm>a.e1rm?b:a);
+      html+=`<div class="stats" style="margin-top:14px">
+        <div class="stat"><div class="v">${best.top}<small style="font-size:12px">kg</small></div><div class="k">PR Top-Satz</div></div>
+        <div class="stat"><div class="v">${Math.round(bestRm.e1rm)}<small style="font-size:12px">kg</small></div><div class="k">gesch. 1RM</div></div>
+        <div class="stat"><div class="v">${Math.round(hist[hist.length-1].vol)}</div><div class="k">Volumen zuletzt</div></div>
+      </div>`; }
+    html+=`</div>`;
+  } else {
+    html+=`<div class="card"><div class="hint" style="margin:0">Diese Einheiten haben HF + Zeit (z. B. aus Strava), aber noch keine Übungen. Tippe unten auf ✏️ und ergänze Übung + Gewicht + Wdh — dann baut sich der Kraft-Verlauf auf.</div></div>`;
+  }
+  html+=`<h2 class="sec">Alle Einheiten</h2><div class="card">`;
+  html+=[...DB.gym].sort((a,b)=>a.date<b.date?1:-1).map(s=>{
+    const vol=gymVolume(s);
+    const head=`${fmtDateLong(s.date)}${vol>0?" · "+Math.round(vol)+" kg":""}${s.durSec?" · "+fmtH(s.durSec):""}${s.avgHr?" · ⌀"+s.avgHr+(s.maxHr?"/"+s.maxHr:"")+" bpm":""}`;
+    const exs=(s.exercises||[]).map(e=>`${esc(e.name)} <span class="muted">(${(e.sets||[]).map(st=>`${st.kg??"?"}×${st.reps??"?"}`).join(", ")})</span>`).join("<br>");
+    return `<div class="item"><div class="ic" style="background:var(--accent-soft);color:var(--accent2)">🏋️‍♀️</div><div class="grow">
+      <div class="t">${head}</div>
+      <div class="s">${exs||(s.note?esc(s.note):"HF/Zeit erfasst")}</div></div>
+      <button class="iconbtn" data-act="edit-gym:${s.id}">✏️</button></div>`;
+  }).join("");
+  html+=`</div>`;
+  return html;
+}
+function mountGym(){}
+
+/* ---- LEICHTATHLETIK ---- */
+function viewLA(){
+  let html=`<div class="between"><h2 class="sec" style="margin:6px 2px">⚡ Leichtathletik</h2>
+    <button class="btn btn-sm" data-act="add-la">+ Einheit</button></div>`;
+  if(!DB.la.length){ html+=`<div class="card">${emptyChart("Noch keine LA-Einheit. Schwerpunkt(e) wählen, Sprint-Zeiten optional – pro Schwerpunkt baut sich eine Historie auf.")}</div>`; return html; }
+  // sprint times per distance
+  const dists=new Set(); DB.la.forEach(s=>(s.results||[]).forEach(r=>r.label&&dists.add(r.label)));
+  const distList=[...dists];
+  if(distList.length){
+    if(!App.distSel||!distList.includes(App.distSel)) App.distSel=distList[0];
+    const series=DB.la.map(s=>{ const rs=(s.results||[]).filter(r=>r.label===App.distSel&&num(r.sec)!=null);
+      if(!rs.length)return null; return {date:s.date, sec:Math.min(...rs.map(r=>num(r.sec)))}; }).filter(Boolean).sort((a,b)=>a.date<b.date?-1:1);
+    html+=`<div class="card"><label class="f">Sprint-Zeiten · Distanz</label>
+      <select data-act="pick-distance">${distList.map(d=>`<option ${d===App.distSel?"selected":""}>${esc(d)}</option>`).join("")}</select>
+      <div style="margin-top:12px">${lineChart({rows:[{ys:series.map(s=>s.sec), color:"var(--accent)"}], xLabels:series.map(s=>fmtDateShort(s.date)), trend:true, yFmt:v=>v.toFixed(2)+"s", empty:"Mind. 2 Zeiten."})}</div>
+      <div class="hint center">Beste Zeit je Tag — <b>niedriger = schneller</b> ${series.length?` · PB ${Math.min(...series.map(s=>s.sec)).toFixed(2)}s`:""}</div></div>`;
+  }
+  // focus distribution
+  const fc={}; DB.la.forEach(s=>(s.focuses||[]).forEach(f=>fc[f]=(fc[f]||0)+1));
+  const fk=Object.keys(fc).sort((a,b)=>fc[b]-fc[a]);
+  if(fk.length){ html+=`<h2 class="sec">Schwerpunkte (Häufigkeit)</h2><div class="card tight">
+    ${barChart({labels:fk.map(k=>k.length>9?k.slice(0,8)+"…":k), values:fk.map(k=>fc[k]), color:"var(--warn)", h:150})}</div>`; }
+  // per-focus history
+  html+=`<h2 class="sec">Alle Einheiten</h2><div class="card">`;
+  html+=[...DB.la].sort((a,b)=>a.date<b.date?1:-1).map(s=>{
+    const tags=(s.focuses||[]).map(f=>`<span class="tag">${esc(f)}</span>`).join("");
+    const res=(s.results||[]).map(r=>`${esc(r.label)}: <b>${r.sec}s</b>`).join(" · ");
+    return `<div class="item"><div class="ic" style="background:#fff3d6;color:var(--warn)">⚡</div><div class="grow">
+      <div class="t">${fmtDateLong(s.date)}${s.durMin?` · ${s.durMin} min`:""}${s.avgHr?` · ⌀${s.avgHr}${s.maxHr?"/"+s.maxHr:""} bpm`:""}${s.rpe?` · RPE ${s.rpe}`:""}</div>
+      <div class="s">${tags||"–"}</div>${res?`<div class="s">${res}</div>`:""}${s.note?`<div class="s muted">${esc(s.note)}</div>`:""}</div>
+      <button class="iconbtn" data-act="edit-la:${s.id}">✏️</button></div>`;
+  }).join("");
+  html+=`</div>`;
+  return html;
+}
+function mountLA(){}
+
+/* ---- MEHR ---- */
+function viewMore(){
+  const s=DB.settings;
+  return `
+  <h2 class="sec">Athletin</h2>
+  <div class="card">
+    <label class="f">Name (für die Begrüßung)</label>
+    <input id="set-athlete" value="${esc(s.athlete)}" placeholder="z. B. Mausi">
+  </div>
+
+  <h2 class="sec">Zone-2-Ziel-Puls (Effizienz-Anker)</h2>
+  <div class="card">
+    <label class="f">Ziel-Puls (bpm)</label>
+    <input id="set-z2" inputmode="numeric" value="${s.zone2Target}">
+    <div class="row" style="margin-top:10px">
+      <div class="field grow"><label class="f">Alter (für 180−Alter / MAF)</label><input id="set-age" inputmode="numeric" value="${s.age||""}" placeholder="z. B. 29"></div>
+      <div class="field" style="align-self:flex-end"><button class="btn sec btn-sm" data-act="apply-maf" style="white-space:nowrap">180 − Alter ↵</button></div>
+    </div>
+    <label class="f">Max-Puls (optional)</label>
+    <input id="set-hrmax" inputmode="numeric" value="${s.hrMax||""}" placeholder="z. B. 192">
+    <div class="hint">Der Ziel-Puls ist der Bezugspunkt für „Pace @ Puls". Tipp: MAF = 180 − Alter ist ein guter Startwert für reines Zone-2-Training.</div>
+  </div>
+
+  <h2 class="sec">Wochen-Soll</h2>
+  <div class="card">
+    <div class="row">
+      <div class="field grow"><label class="f">Lauf</label><input id="set-trun" inputmode="numeric" value="${s.targets.run}"></div>
+      <div class="field grow"><label class="f">Kraft</label><input id="set-tgym" inputmode="numeric" value="${s.targets.gym}"></div>
+      <div class="field grow"><label class="f">LA</label><input id="set-tla" inputmode="numeric" value="${s.targets.la}"></div>
+    </div>
+    <label class="f">Streak zählt ab … Einheiten/Woche</label>
+    <input id="set-streak" inputmode="numeric" value="${s.streakMin}">
+  </div>
+
+  <h2 class="sec">LA-Schwerpunkte</h2>
+  <div class="card">
+    <div class="chips" style="margin-bottom:10px">${s.laFocuses.map(f=>`<span class="chip on" data-act="del-focus:${encodeURIComponent(f)}">${esc(f)} ✕</span>`).join("")}</div>
+    <div class="row"><input id="new-focus" placeholder="Schwerpunkt hinzufügen"><button class="btn sec btn-sm" data-act="add-focus">+</button></div>
+  </div>
+
+  <h2 class="sec">Sprint-Distanzen</h2>
+  <div class="card">
+    <div class="chips" style="margin-bottom:10px">${s.sprintPresets.map(f=>`<span class="chip on" data-act="del-preset:${encodeURIComponent(f)}">${esc(f)} ✕</span>`).join("")}</div>
+    <div class="row"><input id="new-preset" placeholder="z. B. 80m"><button class="btn sec btn-sm" data-act="add-preset">+</button></div>
+  </div>
+
+  <h2 class="sec">Apple Watch · Strava</h2>
+  ${(function(){ const sv=DB.strava||{}; const pend=sv.pending||[]; return `
+  <div class="card">
+    ${stravaConnected() ? `
+      <div class="kv"><span>Verbunden${sv.athlete?" · "+esc(sv.athlete):""}</span><span class="pr">✓</span></div>
+      <div class="kv"><span>Letzter Sync</span><b>${fmtAgo(sv.lastFetch)}</b></div>
+      <button class="btn sec" data-act="strava-sync" style="margin-top:12px">↻ Jetzt synchronisieren</button>
+      <button class="btn ghost" data-act="strava-disconnect" style="margin-top:9px">Strava trennen</button>
+    ` : `
+      <div class="hint" style="margin-top:0">Verbinde Strava, damit Apple-Watch-Workouts automatisch reinkommen: <b>Läufe</b> mit Pace/Puls (+ „Zeit im Ziel-Puls"), <b>Kraft/LA</b> mit HF + Zeit. Client-ID & Secret unter <b>strava.com/settings/api</b> — du kannst <b>dieselben wie in SUB4</b> nehmen (gleiche github.io-Domain).</div>
+      <label class="f">Client-ID</label><input id="s_cid" inputmode="numeric" value="${esc(sv.clientId||"")}" placeholder="z. B. 12345">
+      <label class="f">Client-Secret</label><input id="s_cs" value="${esc(sv.clientSecret||"")}" placeholder="aus Strava-API-Einstellungen">
+      <button class="btn" data-act="strava-connect" style="margin-top:12px">Mit Strava verbinden</button>
+    `}
+    <button class="btn ghost" data-act="file-import" style="margin-top:9px">⬆︎ GPX/TCX-Datei importieren</button>
+    <div class="hint">Hinweis: Gewichte/Sätze/Wdh &amp; Sprint-Zeiten erfasst die Watch nicht — die ergänzt du manuell. Import liefert HF + Zeit (+ beim Lauf Pace/Distanz).</div>
+  </div>
+  ${pend.length ? `<div class="card"><div class="small muted" style="font-weight:700;margin-bottom:4px">Bereit zum Import (${pend.length})</div>${pend.map(pendRow).join("")}</div>` : ""}
+  `; })()}
+
+  <h2 class="sec">Daten</h2>
+  <div class="card">
+    <div class="kv"><span>Läufe / Kraft / LA</span><b>${DB.runs.length} / ${DB.gym.length} / ${DB.la.length}</b></div>
+    <div class="kv"><span>Backups</span><b>${listBackups().length}</b></div>
+    <div style="display:flex; flex-direction:column; gap:9px; margin-top:12px">
+      <button class="btn ghost" data-act="export">⬇︎ Export (JSON)</button>
+      <button class="btn ghost" data-act="import">⬆︎ Import (JSON)</button>
+      ${hasContent(DB)?"":'<button class="btn sec" data-act="demo">✨ Demo-Daten laden (zum Ausprobieren)</button>'}
+      <button class="btn danger" data-act="reset">Alle Daten löschen</button>
+    </div>
+  </div>
+  <div class="center muted small" style="margin:18px 0">GoMausi v2.0 🐭 · lokal & offline · Strava-Sync · unabhängig von SUB4</div>
+  `;
+}
+function mountMore(){
+  const bind=(id,fn)=>{ const el=$("#"+id); if(el) el.addEventListener("change",fn); };
+  bind("set-athlete",e=>{ DB.settings.athlete=e.target.value.trim(); save(); });
+  bind("set-z2",e=>{ const n=num(e.target.value); if(n){DB.settings.zone2Target=Math.round(n); save(); toast("Ziel-Puls: "+DB.settings.zone2Target);} });
+  bind("set-age",e=>{ DB.settings.age=num(e.target.value)||null; save(); });
+  bind("set-hrmax",e=>{ DB.settings.hrMax=num(e.target.value)||null; save(); });
+  bind("set-trun",e=>{ DB.settings.targets.run=Math.max(0,Math.round(num(e.target.value)||0)); save(); });
+  bind("set-tgym",e=>{ DB.settings.targets.gym=Math.max(0,Math.round(num(e.target.value)||0)); save(); });
+  bind("set-tla",e=>{ DB.settings.targets.la=Math.max(0,Math.round(num(e.target.value)||0)); save(); });
+  bind("set-streak",e=>{ DB.settings.streakMin=Math.max(1,Math.round(num(e.target.value)||1)); save(); });
+}
+
+/* ============ SHEETS / FORMS ============ */
+function openSheet(html, onMount){
+  const sh=$("#sheet"); sh.innerHTML=`<div class="grip"></div>`+html;
+  $("#overlay").classList.add("show"); sh.classList.add("open");
+  if(onMount) onMount(sh);
+}
+function closeSheet(){ $("#sheet").classList.remove("open"); $("#overlay").classList.remove("show"); }
+
+/* RUN form */
+function openRunSheet(existing){
+  const r=existing||{}; const min=r.durSec?Math.floor(r.durSec/60):"", sec=r.durSec?r.durSec%60:"";
+  openSheet(`
+    <h3>${existing?"Lauf bearbeiten":"Zone-2-Lauf"}</h3>
+    <label class="f">Datum</label><input id="r-date" type="date" value="${r.date||todayISO()}">
+    <div class="row">
+      <div class="field grow"><label class="f">Distanz (km)</label><input id="r-dist" inputmode="decimal" value="${r.distKm||""}" placeholder="5.0"></div>
+      <div class="field grow"><label class="f">Ø-Puls</label><input id="r-ahr" inputmode="numeric" value="${r.avgHr||""}" placeholder="bpm"></div>
+    </div>
+    <div class="row">
+      <div class="field grow"><label class="f">Dauer Min</label><input id="r-min" inputmode="numeric" value="${min}" placeholder="32"></div>
+      <div class="field grow"><label class="f">Sek</label><input id="r-sec" inputmode="numeric" value="${sec}" placeholder="00"></div>
+      <div class="field grow"><label class="f">Max-Puls</label><input id="r-mhr" inputmode="numeric" value="${r.maxHr||""}" placeholder="opt."></div>
+    </div>
+    <label class="f">Zeit im Ziel-Puls (Min, optional)</label><input id="r-zone" inputmode="numeric" value="${r.zoneMin||""}" placeholder="von der Uhr, optional">
+    <label class="f">Notiz</label><textarea id="r-note" placeholder="Gefühl, Strecke …">${esc(r.note||"")}</textarea>
+    <div style="display:flex; gap:9px; margin-top:16px">
+      ${existing?`<button class="btn danger" data-act="del-run:${existing.id}" style="flex:0 0 auto">🗑</button>`:""}
+      <button class="btn" data-act="save-run" data-id="${existing?existing.id:""}">Speichern</button>
+    </div>
+  `);
+}
+function saveRun(id){
+  const dist=num($("#r-dist").value), ahr=num($("#r-ahr").value);
+  const mn=num($("#r-min").value)||0, sc=num($("#r-sec").value)||0;
+  const durSec=Math.round(mn*60+sc);
+  if(!dist||dist<=0){ toast("Distanz fehlt"); return; }
+  if(!durSec){ toast("Dauer fehlt"); return; }
+  const rec={ id:id||uid(), date:$("#r-date").value||todayISO(), distKm:dist, durSec,
+    avgHr:num($("#r-ahr").value)||null, maxHr:num($("#r-mhr").value)||null,
+    zoneMin:num($("#r-zone").value)||null, note:$("#r-note").value.trim() };
+  const prevEff=effSummary();
+  if(id){ const i=DB.runs.findIndex(x=>x.id===id); if(i>=0)DB.runs[i]=rec; } else DB.runs.push(rec);
+  save(); closeSheet(); App.tab="run"; render();
+  // instant feedback
+  const t=DB.settings.zone2Target, pat=paceAtTarget(rec,t);
+  let msg=`Lauf gespeichert · Pace @${t}: ${fmtPace(pat)}`;
+  if(prevEff&&prevEff.rPat&&pat){ const d=(prevEff.rPat-pat)/prevEff.rPat*100; if(d>1) msg=`Stark! ${fmtPace(pat)} @${t} – ${d.toFixed(1)}% schneller als zuletzt 🎉`; }
+  toast(msg);
+}
+
+/* GYM form (dynamic) */
+let gx=[];
+function openGymSheet(existing){
+  gx = existing ? JSON.parse(JSON.stringify(existing.exercises||[])) : [{name:"",sets:[{kg:"",reps:""}]}];
+  if(!gx.length) gx=[{name:"",sets:[{kg:"",reps:""}]}];
+  openSheet(`
+    <h3>${existing?"Kraft bearbeiten":"Kraft / Studio"}</h3>
+    <label class="f">Datum</label><input id="g-date" type="date" value="${existing?existing.date:todayISO()}">
+    <datalist id="exNames">${exerciseNames().map(n=>`<option value="${esc(n)}">`).join("")}</datalist>
+    <div id="gxWrap"></div>
+    <button class="btn ghost btn-sm" data-act="gym-add-ex" style="margin-top:4px; width:100%">+ Übung</button>
+    <div class="row" style="margin-top:8px">
+      <div class="field grow"><label class="f">Dauer (Min)</label><input id="g-dur" inputmode="numeric" value="${existing&&existing.durSec?Math.round(existing.durSec/60):""}" placeholder="von der Watch"></div>
+      <div class="field grow"><label class="f">Ø-Puls</label><input id="g-ahr" inputmode="numeric" value="${existing&&existing.avgHr||""}" placeholder="opt."></div>
+      <div class="field grow"><label class="f">Max-Puls</label><input id="g-mhr" inputmode="numeric" value="${existing&&existing.maxHr||""}" placeholder="opt."></div>
+    </div>
+    <label class="f">Notiz</label><textarea id="g-note" placeholder="…">${esc(existing?existing.note||"":"")}</textarea>
+    <div style="display:flex; gap:9px; margin-top:16px">
+      ${existing?`<button class="btn danger" data-act="del-gym:${existing.id}" style="flex:0 0 auto">🗑</button>`:""}
+      <button class="btn" data-act="save-gym" data-id="${existing?existing.id:""}">Speichern</button>
+    </div>
+  `, ()=>renderGx());
+}
+function collectGx(){
+  document.querySelectorAll("#gxWrap .exblock").forEach((blk,i)=>{
+    if(!gx[i])return;
+    gx[i].name=blk.querySelector("[data-namefield]").value;
+    blk.querySelectorAll(".setrow").forEach((row,j)=>{
+      if(!gx[i].sets[j])return;
+      gx[i].sets[j].kg=row.querySelector("[data-f=kg]").value;
+      gx[i].sets[j].reps=row.querySelector("[data-f=reps]").value;
+    });
+  });
+}
+function renderGx(){
+  const wrap=$("#gxWrap"); if(!wrap)return;
+  wrap.innerHTML=gx.map((e,i)=>`
+    <div class="exblock" data-ex="${i}">
+      <div class="row" style="margin-bottom:8px">
+        <input class="grow" data-namefield list="exNames" placeholder="Übung (z. B. Kniebeuge)" value="${esc(e.name)}">
+        <button class="iconbtn" data-act="gym-load:${i}" title="letzte Werte">↺</button>
+        <button class="iconbtn" data-act="gym-del-ex:${i}">🗑</button>
+      </div>
+      ${(e.sets||[]).map((st,j)=>`<div class="setrow">
+        <input data-f="kg" inputmode="decimal" placeholder="kg" value="${st.kg!==undefined&&st.kg!==null?esc(st.kg):""}">
+        <input data-f="reps" inputmode="numeric" placeholder="Wdh" value="${st.reps!==undefined&&st.reps!==null?esc(st.reps):""}">
+        <button class="iconbtn" data-act="gym-del-set:${i}.${j}">✕</button>
+      </div>`).join("")}
+      <button class="btn sec btn-sm" data-act="gym-add-set:${i}" style="width:100%; margin-top:2px">+ Satz</button>
+    </div>`).join("");
+}
+function saveGym(id){
+  collectGx();
+  const exercises=gx.map(e=>({ name:(e.name||"").trim(),
+      sets:(e.sets||[]).map(s=>({kg:num(s.kg),reps:num(s.reps)})).filter(s=>s.kg!=null&&s.reps!=null) }))
+    .filter(e=>e.name && e.sets.length);
+  const durMin=num($("#g-dur").value), gAhr=num($("#g-ahr").value), gMhr=num($("#g-mhr").value);
+  if(!exercises.length && !durMin && !gAhr){ toast("Mind. eine Übung – oder HF/Dauer von der Watch."); return; }
+  const rec={ id:id||uid(), date:$("#g-date").value||todayISO(), note:$("#g-note").value.trim(), exercises,
+    durSec:durMin?Math.round(durMin*60):null, avgHr:gAhr?Math.round(gAhr):null, maxHr:gMhr?Math.round(gMhr):null };
+  if(id){ const i=DB.gym.findIndex(x=>x.id===id); if(i>=0)DB.gym[i]=rec; } else DB.gym.push(rec);
+  save(); closeSheet(); App.tab="gym"; render(); toast("Kraft-Einheit gespeichert 💪");
+}
+
+/* LA form */
+let laF=new Set(), laR=[];
+function openLASheet(existing){
+  laF=new Set(existing?existing.focuses||[]:[]);
+  laR=existing?JSON.parse(JSON.stringify(existing.results||[])):[];
+  const s=DB.settings;
+  openSheet(`
+    <h3>${existing?"LA-Einheit bearbeiten":"Leichtathletik"}</h3>
+    <label class="f">Datum</label><input id="l-date" type="date" value="${existing?existing.date:todayISO()}">
+    <label class="f">Schwerpunkt(e)</label>
+    <div class="chips" id="l-focus">${s.laFocuses.map(f=>`<span class="chip ${laF.has(f)?"on":""}" data-act="la-focus:${encodeURIComponent(f)}">${esc(f)}</span>`).join("")}</div>
+    <label class="f">Sprint-Zeiten (optional)</label>
+    <div id="lrWrap"></div>
+    <button class="btn ghost btn-sm" data-act="la-add-res" style="width:100%; margin-top:2px">+ Zeit</button>
+    <div class="row" style="margin-top:6px">
+      <div class="field grow"><label class="f">RPE (1–10)</label><input id="l-rpe" inputmode="numeric" value="${existing?existing.rpe||"":""}" placeholder="Belastung"></div>
+      <div class="field grow"><label class="f">Dauer (Min)</label><input id="l-dur" inputmode="numeric" value="${existing?existing.durMin||"":""}" placeholder="opt."></div>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <div class="field grow"><label class="f">Ø-Puls</label><input id="l-ahr" inputmode="numeric" value="${existing&&existing.avgHr||""}" placeholder="opt."></div>
+      <div class="field grow"><label class="f">Max-Puls</label><input id="l-mhr" inputmode="numeric" value="${existing&&existing.maxHr||""}" placeholder="opt."></div>
+    </div>
+    <label class="f">Notiz</label><textarea id="l-note" placeholder="Übungen, Technik-Fokus …">${esc(existing?existing.note||"":"")}</textarea>
+    <div style="display:flex; gap:9px; margin-top:16px">
+      ${existing?`<button class="btn danger" data-act="del-la:${existing.id}" style="flex:0 0 auto">🗑</button>`:""}
+      <button class="btn" data-act="save-la" data-id="${existing?existing.id:""}">Speichern</button>
+    </div>
+  `, ()=>renderLR());
+}
+function collectLR(){
+  document.querySelectorAll("#lrWrap .setrow").forEach((row,i)=>{ if(!laR[i])return;
+    laR[i].label=row.querySelector("[data-f=label]").value; laR[i].sec=row.querySelector("[data-f=sec]").value; });
+}
+function renderLR(){
+  const wrap=$("#lrWrap"); if(!wrap)return; const presets=DB.settings.sprintPresets;
+  wrap.innerHTML=laR.map((r,i)=>`<div class="setrow">
+    <input data-f="label" list="distList" placeholder="Distanz" value="${esc(r.label||"")}">
+    <input data-f="sec" inputmode="decimal" placeholder="Sek" value="${esc(r.sec||"")}">
+    <button class="iconbtn" data-act="la-del-res:${i}">✕</button>
+  </div>`).join("")+`<datalist id="distList">${presets.map(p=>`<option value="${esc(p)}">`).join("")}</datalist>`;
+}
+function saveLA(id){
+  collectLR();
+  const results=laR.map(r=>({label:(r.label||"").trim(), sec:num(r.sec)})).filter(r=>r.label&&r.sec!=null);
+  const focuses=[...laF];
+  if(!focuses.length && !results.length){ toast("Wähle mind. einen Schwerpunkt."); return; }
+  const rec={ id:id||uid(), date:$("#l-date").value||todayISO(), focuses, results,
+    rpe:num($("#l-rpe").value)||null, durMin:num($("#l-dur").value)||null,
+    avgHr:num($("#l-ahr").value)||null, maxHr:num($("#l-mhr").value)||null, note:$("#l-note").value.trim() };
+  if(id){ const i=DB.la.findIndex(x=>x.id===id); if(i>=0)DB.la[i]=rec; } else DB.la.push(rec);
+  save(); closeSheet(); App.tab="la"; render(); toast("LA-Einheit gespeichert ⚡");
+}
+
+/* ============ DATA ACTIONS ============ */
+function doExport(){
+  const blob=new Blob([JSON.stringify(DB,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`gomausi-backup-${todayISO()}.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function doImport(){
+  const inp=document.createElement("input"); inp.type="file"; inp.accept="application/json,.json";
+  inp.onchange=()=>{ const f=inp.files[0]; if(!f)return; const rd=new FileReader();
+    rd.onload=()=>{ try{ const d=JSON.parse(rd.result);
+      if(!d||typeof d!=="object") throw 0;
+      if(hasContent(DB) && !confirm("Bestehende Daten werden ersetzt. Fortfahren?")) return;
+      DB=migrateDB(d); save(); render(); toast("Import erfolgreich ✓");
+    }catch(e){ toast("Ungültige Datei"); } };
+    rd.readAsText(f); };
+  inp.click();
+}
+function loadDemo(){
+  const today=new Date(); const iso=d=>isoD(d);
+  const dayBack=n=>{ const d=new Date(today); d.setDate(d.getDate()-n); return iso(d); };
+  // 9 Wochen Läufe mit sich verbessernder Effizienz (Pace bei ~145 sinkt)
+  const runs=[]; for(let w=8;w>=0;w--){
+    const base=10.2 - (8-w)*0.18;             // min/km, verbessert sich
+    const hr=156 - (8-w)*0.7 + (w%2?1:0);     // Puls leicht runter
+    const dist=4 + ((8-w)%3)*0.5;
+    const pace=base + (w%2? .15:-.1);
+    runs.push({id:uid(), date:dayBack(w*7+3), distKm:+dist.toFixed(1), durSec:Math.round(pace*60*dist),
+      avgHr:Math.round(hr), maxHr:Math.round(hr+12), zoneMin:Math.round(pace*dist*0.8), note:""});
+    if(w%2===0) runs.push({id:uid(), date:dayBack(w*7+6), distKm:+(dist+1).toFixed(1), durSec:Math.round((pace+.2)*60*(dist+1)),
+      avgHr:Math.round(hr+2), maxHr:Math.round(hr+14), zoneMin:null, note:""});
+  }
+  const gym=[]; const lifts=[["Kniebeuge",40],["Bankdrücken",27],["Kreuzheben",55]];
+  for(let w=8;w>=0;w-=1){ if(w%1)continue;
+    gym.push({id:uid(), date:dayBack(w*7+1), note:"", exercises:lifts.map(([n,b])=>({name:n,
+      sets:[1,2,3].map(()=>({kg:b+(8-w)*2.5, reps:8}))}))});
+    gym.push({id:uid(), date:dayBack(w*7+4), note:"", exercises:[{name:"Ausfallschritte",sets:[{kg:14+(8-w),reps:10},{kg:14+(8-w),reps:10}]},{name:"Klimmzüge",sets:[{kg:0,reps:5+Math.floor((8-w)/2)}]}]});
+  }
+  const la=[]; for(let w=8;w>=0;w--){
+    la.push({id:uid(), date:dayBack(w*7), focuses:["Sprint","Start/Beschleunigung"],
+      results:[{label:"30m",sec:+(4.8-(8-w)*0.03).toFixed(2)},{label:"60m",sec:+(8.6-(8-w)*0.05).toFixed(2)}], rpe:8, durMin:90, note:"Bahn"});
+    la.push({id:uid(), date:dayBack(w*7+2), focuses:["Technik","Sprung"], results:[], rpe:6, durMin:75, note:"Technik"});
+  }
+  DB.runs=runs; DB.gym=gym; DB.la=la; DB.settings.zone2Target=145; DB.settings.onboarded=true; DB.settings.athlete="Mausi";
+  save(); App.tab="dash"; render(); toast("Demo-Daten geladen ✨");
+}
+function resetAll(){
+  if(!confirm("Wirklich ALLE GoMausi-Daten löschen? (Backups bleiben erhalten)")) return;
+  makeBackupNow(); DB=freshDB(); save(); App.tab="dash"; render(); toast("Alle Daten gelöscht");
+}
+function makeBackupNow(){ try{ const raw=localStorage.getItem(LS); if(raw){ localStorage.setItem(BK_PREFIX+Date.now(), raw); const ks=listBackups(); while(ks.length>BK_MAX) localStorage.removeItem(ks.shift()); } }catch(e){} }
+
+/* ============ STRAVA (client-seitig, wie SUB4 — kostenlos, GitHub Pages) ============ */
+function sCfg(){ if(!DB.strava) DB.strava={}; return DB.strava; }
+function stravaConnected(){ return !!(DB.strava && DB.strava.refreshToken); }
+function stravaPendingCount(){ return ((DB.strava&&DB.strava.pending)||[]).length; }
+function stravaBucket(type){ return /^(Run|VirtualRun|TrailRun|Treadmill)$/.test(type) ? "run" : "gym"; }
+async function stravaTokenExchange(body){
+  const r=await fetch("https://www.strava.com/oauth/token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error("/oauth/token "+r.status); return r.json();
+}
+async function checkStravaCallback(){
+  const u=new URL(location.href); const code=u.searchParams.get("code"); if(!code) return;
+  const c=sCfg(); if(!c.clientId||!c.clientSecret){ history.replaceState({},"",u.pathname); return; }
+  try{
+    const d=await stravaTokenExchange({client_id:c.clientId,client_secret:c.clientSecret,code,grant_type:"authorization_code"});
+    if(!d.access_token) throw new Error(d.message||"keine Tokens");
+    c.accessToken=d.access_token; c.refreshToken=d.refresh_token; c.expiresAt=d.expires_at*1000;
+    c.athlete=d.athlete?((d.athlete.firstname||"")+" "+(d.athlete.lastname||"")).trim():null;
+    save(); history.replaceState({},"",u.pathname); toast("Strava verknüpft ✓");
+    await stravaFetchActivities();
+  }catch(e){ history.replaceState({},"",u.pathname); toast("Strava-Auth Fehler: "+e.message); }
+  render();
+}
+async function ensureStravaToken(){
+  const c=sCfg(); if(!c.refreshToken) return false;
+  if(c.expiresAt && c.expiresAt-Date.now()>60000 && c.accessToken) return true;
+  try{ const d=await stravaTokenExchange({client_id:c.clientId,client_secret:c.clientSecret,refresh_token:c.refreshToken,grant_type:"refresh_token"});
+    if(!d.access_token) return false;
+    c.accessToken=d.access_token; c.refreshToken=d.refresh_token||c.refreshToken; c.expiresAt=d.expires_at*1000; save(); return true;
+  }catch(e){ console.warn("Strava refresh fail",e); return false; }
+}
+async function stravaFetchActivities(silent){
+  if(!await ensureStravaToken()){ if(!silent) toast("Strava nicht verbunden"); return; }
+  const c=sCfg(); const after=Math.floor((Date.now()-21*86400000)/1000);
+  try{
+    const r=await fetch(`https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=50`,{headers:{"Authorization":"Bearer "+c.accessToken}});
+    if(!r.ok){ if(!silent) toast("Strava-Abruf Fehler "+r.status); return; }
+    const acts=await r.json(); const ignored=new Set(c.importedIds||[]);
+    const files=(c.pending||[]).filter(p=>String(p.id).startsWith("file-")); // Datei-Pendings behalten
+    c.pending=files.concat(acts.filter(a=>!ignored.has(a.id)).map(a=>({
+      id:a.id, type:a.type, name:a.name, distance:a.distance, moving_time:a.moving_time, elapsed_time:a.elapsed_time,
+      average_heartrate:a.average_heartrate, max_heartrate:a.max_heartrate, start_date:a.start_date_local||a.start_date,
+      bucket:stravaBucket(a.type)
+    })));
+    c.lastFetch=Date.now(); save();
+    if(!silent) toast(stravaPendingCount()?`${stravaPendingCount()} Aktivität(en) bereit`:"Keine neuen Aktivitäten");
+  }catch(e){ if(!silent) toast("Strava-Abruf Fehler: "+e.message); }
+}
+function stravaConnect(){
+  const cid=($("#s_cid")||{}).value&&$("#s_cid").value.trim(), cs=($("#s_cs")||{}).value&&$("#s_cs").value.trim();
+  if(!cid||!cs){ toast("Client-ID + Secret nötig"); return; }
+  const c=sCfg(); c.clientId=cid; c.clientSecret=cs; save();
+  const redirect=location.origin+location.pathname;
+  location.href=`https://www.strava.com/oauth/authorize?client_id=${encodeURIComponent(cid)}&response_type=code&redirect_uri=${encodeURIComponent(redirect)}&approval_prompt=auto&scope=activity:read_all`;
+}
+function stravaDisconnect(){ if(!confirm("Strava trennen? Importierte Einheiten bleiben erhalten.")) return;
+  const ids=(DB.strava&&DB.strava.importedIds)||[]; DB.strava={importedIds:ids}; save(); render(); toast("Strava getrennt"); }
+async function fetchStravaStreams(id){
+  if(!await ensureStravaToken()) return null; const c=sCfg();
+  try{ const r=await fetch(`https://www.strava.com/api/v3/activities/${id}/streams?keys=time,heartrate&key_by_type=true`,{headers:{"Authorization":"Bearer "+c.accessToken}});
+    if(!r.ok) return null; return r.json();
+  }catch(e){ return null; }
+}
+function streamsZone(streams, target){
+  const T=streams&&streams.time&&streams.time.data, H=streams&&streams.heartrate&&streams.heartrate.data;
+  if(!T||!H||T.length<4) return null; let zoneSec=0, mx=0; const N=Math.min(T.length,H.length);
+  for(let i=1;i<N;i++){ const dt=T[i]-T[i-1]; if(H[i]>mx) mx=H[i]; if(H[i]&&H[i]<=target) zoneSec+=dt; }
+  return { zoneSec, maxHr:mx||null };
+}
+async function stravaImport(actId){
+  const c=sCfg(); const a=(c.pending||[]).find(x=>String(x.id)===String(actId));
+  if(!a){ toast("Aktivität nicht mehr in der Liste"); return; }
+  const date=isoD(new Date(a.start_date)); const sec=a.moving_time||a.elapsed_time||0;
+  const avgHr=a.average_heartrate?Math.round(a.average_heartrate):null; let maxHr=a.max_heartrate?Math.round(a.max_heartrate):null;
+  if(a.bucket==="run"){
+    const distKm=+((a.distance||0)/1000).toFixed(2); let zoneMin=null;
+    if(String(a.id).startsWith("file-")){ if(a._zoneSec!=null) zoneMin=Math.round(a._zoneSec/60); }
+    else { const st=await fetchStravaStreams(a.id); if(st){ const z=streamsZone(st, DB.settings.zone2Target); if(z){ if(z.maxHr)maxHr=z.maxHr; zoneMin=Math.round(z.zoneSec/60); } } }
+    DB.runs.push({id:uid(),date,distKm,durSec:sec,avgHr,maxHr,zoneMin,note:"Strava: "+(a.name||"")});
+  } else if(a.bucket==="la"){
+    DB.la.push({id:uid(),date,focuses:[],results:[],rpe:null,durMin:Math.round(sec/60)||null,avgHr,maxHr,note:"Import: "+(a.name||"")});
+  } else {
+    DB.gym.push({id:uid(),date,note:"Import: "+(a.name||""),exercises:[],durSec:sec,avgHr,maxHr});
+  }
+  c.importedIds=(c.importedIds||[]).concat([a.id]); c.pending=(c.pending||[]).filter(x=>String(x.id)!==String(a.id)); save();
+  App.tab=a.bucket==="run"?"run":a.bucket==="la"?"la":"gym"; render(); toast("Importiert ✓ — Details ggf. ergänzen");
+}
+function stravaIgnore(actId){ const c=sCfg();
+  if(!String(actId).startsWith("file-")) c.importedIds=(c.importedIds||[]).concat([actId]);
+  c.pending=(c.pending||[]).filter(x=>String(x.id)!==String(actId)); save(); render(); }
+function pendRow(p){ const sec=p.moving_time||0;
+  const meta=[ isoD(new Date(p.start_date)),
+    p.distance?(p.distance/1000).toFixed(2)+" km":null, fmtH(sec),
+    p.average_heartrate?"⌀"+Math.round(p.average_heartrate)+(p.max_heartrate?"/"+Math.round(p.max_heartrate):"")+" bpm":null
+  ].filter(Boolean).join(" · ");
+  return `<div class="item"><div class="grow">
+    <div class="t">${esc(p.name||p.type)} <span class="muted small">(${esc(p.type)})</span></div>
+    <div class="s">${meta}</div>
+    <div class="row" style="margin-top:7px; align-items:center">
+      <select data-act="pend-bucket:${p.id}" style="padding:8px; font-size:13px; flex:0 0 auto; width:auto">
+        <option value="run" ${p.bucket==="run"?"selected":""}>→ Lauf</option>
+        <option value="gym" ${p.bucket==="gym"?"selected":""}>→ Kraft</option>
+        <option value="la" ${p.bucket==="la"?"selected":""}>→ LA</option>
+      </select>
+      <button class="btn sec btn-sm" data-act="strava-import:${p.id}">Import</button>
+      <button class="iconbtn" data-act="strava-ignore:${p.id}" title="ignorieren">✕</button>
+    </div></div></div>`;
+}
+
+/* ============ DATEI-IMPORT (GPX / TCX) ============ */
+function haversine(la1,lo1,la2,lo2){ const R=6371000,r=Math.PI/180; const dla=(la2-la1)*r, dlo=(lo2-lo1)*r;
+  const a=Math.sin(dla/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dlo/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
+function parseWorkoutFile(text){
+  try{
+    const xml=new DOMParser().parseFromString(text,"application/xml");
+    if(xml.getElementsByTagName("parsererror").length) return null;
+    let pts=[];
+    const tps=xml.getElementsByTagName("Trackpoint");
+    if(tps.length){ // TCX
+      for(const tp of tps){ const tEl=tp.getElementsByTagName("Time")[0]; const dEl=tp.getElementsByTagName("DistanceMeters")[0];
+        const hrEl=tp.getElementsByTagName("HeartRateBpm")[0]; const hv=hrEl?hrEl.getElementsByTagName("Value")[0]:null;
+        pts.push({ t:tEl?new Date(tEl.textContent).getTime():null, m:dEl?+dEl.textContent:null, hr:hv?+hv.textContent:null }); }
+    } else { // GPX
+      const tk=xml.getElementsByTagName("trkpt"); let prev=null, cum=0;
+      for(const p of tk){ const lat=+p.getAttribute("lat"), lon=+p.getAttribute("lon");
+        const tEl=p.getElementsByTagName("time")[0];
+        let hr=null; const h=p.getElementsByTagName("gpxtpx:hr")[0]||p.getElementsByTagName("ns3:hr")[0]||p.getElementsByTagName("hr")[0]; if(h)hr=+h.textContent;
+        if(prev && !isNaN(lat) && !isNaN(lon)) cum+=haversine(prev.lat,prev.lon,lat,lon);
+        if(!isNaN(lat)) prev={lat,lon};
+        pts.push({ t:tEl?new Date(tEl.textContent).getTime():null, m:cum, hr }); }
+    }
+    pts=pts.filter(p=>p.t!=null); if(pts.length<2) return null;
+    const durSec=Math.round((pts[pts.length-1].t-pts[0].t)/1000);
+    const dist=pts[pts.length-1].m||0; const hrs=pts.map(p=>p.hr).filter(h=>h);
+    let zoneSec=0; const tgt=DB.settings.zone2Target;
+    for(let i=1;i<pts.length;i++){ const dt=(pts[i].t-pts[i-1].t)/1000; if(pts[i].hr&&pts[i].hr<=tgt) zoneSec+=dt; }
+    return { date:isoD(new Date(pts[0].t)), distKm:+(dist/1000).toFixed(2), durSec,
+      avgHr:hrs.length?Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length):null, maxHr:hrs.length?Math.max(...hrs):null, zoneSec:Math.round(zoneSec) };
+  }catch(e){ console.warn("parse fail",e); return null; }
+}
+function doFileImport(){
+  const inp=document.createElement("input"); inp.type="file"; inp.accept=".gpx,.tcx,application/gpx+xml,application/xml,text/xml"; inp.multiple=true;
+  inp.onchange=()=>{ const files=[...inp.files]; if(!files.length) return; let done=0; const parsed=[];
+    files.forEach(f=>{ const rd=new FileReader();
+      rd.onload=()=>{ const w=parseWorkoutFile(rd.result); if(w){ w._fname=f.name; parsed.push(w); } if(++done===files.length) finishFileImport(parsed); };
+      rd.onerror=()=>{ if(++done===files.length) finishFileImport(parsed); }; rd.readAsText(f); }); };
+  inp.click();
+}
+function finishFileImport(parsed){
+  if(!parsed.length){ toast("Keine lesbaren GPX/TCX-Dateien"); return; }
+  const c=sCfg(); c.pending=c.pending||[];
+  parsed.forEach((w,i)=>{ c.pending.unshift({ id:"file-"+Date.now()+"-"+i, type:"Datei", name:w._fname, distance:w.distKm*1000, moving_time:w.durSec,
+    average_heartrate:w.avgHr, max_heartrate:w.maxHr, start_date:w.date+"T12:00:00", bucket:w.distKm>0.3?"run":"gym", _zoneSec:w.zoneSec }); });
+  save(); App.tab="more"; render(); toast(`${parsed.length} Datei(en) eingelesen — Bereich wählen & importieren`);
+}
+
+/* ============ EVENT ROUTER ============ */
+function actOf(e){ const el=e.target.closest("[data-act]"); return el?{el,act:el.dataset.act}:null; }
+document.addEventListener("click", e=>{
+  const a=actOf(e); if(!a) return; const [cmd,arg]=a.act.split(":");
+  switch(cmd){
+    case "tab": App.tab=arg; render(); break;
+    case "sheet-close": closeSheet(); break;
+    case "onboard": App.tab="more"; render(); setTimeout(()=>{const z=$("#set-z2"); if(z){z.focus();z.scrollIntoView({block:"center"});}},120);
+      DB.settings.onboarded=true; save(); break;
+    case "add-run": openRunSheet(); break;
+    case "add-gym": openGymSheet(); break;
+    case "add-la": openLASheet(); break;
+    case "edit-run": openRunSheet(DB.runs.find(r=>r.id===arg)); break;
+    case "edit-gym": openGymSheet(DB.gym.find(r=>r.id===arg)); break;
+    case "edit-la": openLASheet(DB.la.find(r=>r.id===arg)); break;
+    case "save-run": saveRun(a.el.dataset.id||""); break;
+    case "save-gym": saveGym(a.el.dataset.id||""); break;
+    case "save-la": saveLA(a.el.dataset.id||""); break;
+    case "del-run": if(confirm("Diesen Lauf löschen?")){ DB.runs=DB.runs.filter(r=>r.id!==arg); save(); closeSheet(); render(); toast("Gelöscht"); } break;
+    case "del-gym": if(confirm("Diese Einheit löschen?")){ DB.gym=DB.gym.filter(r=>r.id!==arg); save(); closeSheet(); render(); toast("Gelöscht"); } break;
+    case "del-la": if(confirm("Diese Einheit löschen?")){ DB.la=DB.la.filter(r=>r.id!==arg); save(); closeSheet(); render(); toast("Gelöscht"); } break;
+    case "eff": App.effMode=arg; render(); break;
+    case "gym-add-ex": collectGx(); gx.push({name:"",sets:[{kg:"",reps:""}]}); renderGx(); break;
+    case "gym-del-ex": collectGx(); gx.splice(+arg,1); if(!gx.length)gx=[{name:"",sets:[{kg:"",reps:""}]}]; renderGx(); break;
+    case "gym-add-set": collectGx(); gx[+arg].sets.push({kg:"",reps:""}); renderGx(); break;
+    case "gym-del-set": { collectGx(); const [i,j]=arg.split(".").map(Number); gx[i].sets.splice(j,1); if(!gx[i].sets.length)gx[i].sets=[{kg:"",reps:""}]; renderGx(); break; }
+    case "gym-load": { collectGx(); const i=+arg; const nm=(gx[i].name||"").trim();
+      if(!nm){ toast("Erst Übungsname eintragen"); break; }
+      const h=exerciseHistory(nm); if(!h.length){ toast("Keine früheren Sätze"); break; }
+      // letzte Session mit dieser Übung
+      let last=null; [...DB.gym].sort((a,b)=>a.date<b.date?1:-1).some(s=>{const ex=(s.exercises||[]).find(e=>(e.name||"").trim().toLowerCase()===nm.toLowerCase()); if(ex){last=ex;return true;} return false;});
+      if(last){ gx[i].sets=last.sets.map(s=>({kg:s.kg,reps:s.reps})); renderGx(); toast("Letzte Werte übernommen ↺"); } break; }
+    case "la-focus": { const f=decodeURIComponent(arg); laF.has(f)?laF.delete(f):laF.add(f);
+      const chip=a.el; chip.classList.toggle("on"); break; }
+    case "la-add-res": collectLR(); laR.push({label:"",sec:""}); renderLR(); break;
+    case "la-del-res": collectLR(); laR.splice(+arg,1); renderLR(); break;
+    case "apply-maf": { const age=num($("#set-age").value); if(!age){toast("Alter eintragen");break;} const v=180-Math.round(age);
+      DB.settings.age=Math.round(age); DB.settings.zone2Target=v; $("#set-z2").value=v; save(); toast("Ziel-Puls (MAF): "+v); break; }
+    case "add-focus": { const v=$("#new-focus").value.trim(); if(v&&!DB.settings.laFocuses.includes(v)){DB.settings.laFocuses.push(v); save(); render();} break; }
+    case "del-focus": { const f=decodeURIComponent(arg); DB.settings.laFocuses=DB.settings.laFocuses.filter(x=>x!==f); save(); render(); break; }
+    case "add-preset": { const v=$("#new-preset").value.trim(); if(v&&!DB.settings.sprintPresets.includes(v)){DB.settings.sprintPresets.push(v); save(); render();} break; }
+    case "del-preset": { const f=decodeURIComponent(arg); DB.settings.sprintPresets=DB.settings.sprintPresets.filter(x=>x!==f); save(); render(); break; }
+    case "strava-connect": stravaConnect(); break;
+    case "strava-disconnect": stravaDisconnect(); break;
+    case "strava-sync": toast("Synchronisiere …"); stravaFetchActivities(); break;
+    case "strava-import": stravaImport(arg); break;
+    case "strava-ignore": stravaIgnore(arg); break;
+    case "file-import": doFileImport(); break;
+    case "export": doExport(); break;
+    case "import": doImport(); break;
+    case "demo": loadDemo(); break;
+    case "reset": resetAll(); break;
+  }
+});
+document.addEventListener("change", e=>{
+  const a=actOf(e); if(!a) return; const parts=a.act.split(":"); const cmd=parts[0];
+  if(cmd==="pick-exercise"){ App.exSel=e.target.value; render(); }
+  else if(cmd==="pick-distance"){ App.distSel=e.target.value; render(); }
+  else if(cmd==="pend-bucket"){ const id=parts[1]; const c=sCfg(); const p=(c.pending||[]).find(x=>String(x.id)===id); if(p){ p.bucket=e.target.value; save(); } }
+});
+
+/* ============ INIT ============ */
+render();
+checkStravaCallback();
+if(stravaConnected()) stravaFetchActivities(true).then(()=>{ if(stravaPendingCount()) render(); });
+if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
+window.addEventListener("error", ev=>console.error("GoMausi error:", ev.error||ev.message));
+</script>
+</body>
+</html>
